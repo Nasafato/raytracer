@@ -88,12 +88,7 @@ Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces) {
     return rgba;
 }
 
-void
-Camera::writeRgba (const char fileName[],
-           const Imf::Rgba *pixels,
-           int width,
-           int height)
-{
+void Camera::writeRgba (const char fileName[], const Imf::Rgba *pixels, int width, int height) {
     Imf::RgbaOutputFile file (fileName, width, height, Imf::WRITE_RGBA);
     file.setFrameBuffer (pixels, 1, width);
     file.writePixels (height);

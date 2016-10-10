@@ -53,7 +53,7 @@ float getTokenAsFloat (string inString, int whichToken)
 
 
 // read the scene file.
-Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
+Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::vector<Light *>& lights)
 {
     Camera camera;
     Material* currentMaterial = new Material();
@@ -135,8 +135,18 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
                 // slightly different from the rest, we need to examine the second param,
                 // which is at the third position on the line:
                 switch (line[2]) {
-                    case 'p':   // point light
-                        break;
+                    case 'p': { // point light
+                        float x, y, z, r, g, b;
+                        x = getTokenAsFloat(line, 2);
+                        y = getTokenAsFloat(line, 3);
+                        z = getTokenAsFloat(line, 4);
+                        r = getTokenAsFloat(line, 5);
+                        g = getTokenAsFloat(line, 6);
+                        b = getTokenAsFloat(line, 7);
+                        cout << "x: " << x << ", y: " << y << ", z: " << z << ", r: " << r << ", g: " << g << ", b: " << b << endl;
+                        PointLight *light = new PointLight(Point(x, y, z), r, g, b);
+                        lights.push_back(light);
+                    }
                     case 'd':   // directional light
                         break;
                     case 'a':   // ambient light
@@ -197,8 +207,9 @@ int main (int argc, char *argv[])
     }
 
     vector<Surface *> surfaces;
-    Camera camera = parseSceneFile (argv[1], surfaces);
-    camera.writeScene(argv[2], surfaces);
+    vector<Light *> lights;
+    Camera camera = parseSceneFile (argv[1], surfaces, lights);
+    // camera.writeScene(argv[2], surfaces);
 
     for (int i = 0; i < surfaces.size(); i++) {
         delete surfaces[i];

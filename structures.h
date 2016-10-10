@@ -7,5 +7,6 @@
 #include "ray.h"
 #include "material.h"
 #include "camera.h"
+#include "light.h"
 
 #endif
