@@ -266,15 +266,22 @@ Imf::Rgba calculatePixel(int x, int y, Camera camera, vector<Surface *> surfaces
     Imf::Rgba rgba = Imf::Rgba(0.0, 0.0, 0.0, 1.0);
     float minT = std::numeric_limits<float>::max();
     float testT;
+    bool intersected = false;
+    Surface* closestSurface = surfaces[0];
 
     for (int i = 0; i < surfaces.size(); i++) {
         testT = surfaces[i]->intersect(ray);
         if (testT < minT & testT != -1.0) {
             minT = testT;
-            rgba.r = surfaces[i]->material.dr;
-            rgba.g = surfaces[i]->material.dg;
-            rgba.b = surfaces[i]->material.db;
+            closestSurface = surfaces[i];
+            intersected = true;
         }
+    }
+
+    if (intersected) {
+        rgba.r = closestSurface->material.dr;
+        rgba.g = closestSurface->material.dg;
+        rgba.b = closestSurface->material.db;
     }
 
     return rgba;
