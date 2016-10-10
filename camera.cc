@@ -1,6 +1,8 @@
 #include "camera.h"
 #include <iostream>
 
+using namespace std;
+
 Camera::Camera() {
     eye = Point();
     direction = Vec3();
@@ -59,3 +61,53 @@ Ray Camera::getRayForPixel(int x, int y) {
 
     return Ray(eye, dir);
 }
+
+Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces) {
+    Ray ray = getRayForPixel(x, y);
+    Imf::Rgba rgba = Imf::Rgba(0.0, 0.0, 0.0, 1.0);
+    float minT = std::numeric_limits<float>::max();
+    float testT;
+    bool intersected = false;
+    Surface* closestSurface = surfaces[0];
+
+    for (int i = 0; i < surfaces.size(); i++) {
+        testT = surfaces[i]->intersect(ray);
+        if (testT < minT & testT != -1.0) {
+            minT = testT;
+            closestSurface = surfaces[i];
+            intersected = true;
+        }
+    }
+
+    if (intersected) {
+        rgba.r = closestSurface->material.dr;
+        rgba.g = closestSurface->material.dg;
+        rgba.b = closestSurface->material.db;
+    }
+
+    return rgba;
+}
+
+void
+Camera::writeRgba (const char fileName[],
+           const Imf::Rgba *pixels,
+           int width,
+           int height)
+{
+    Imf::RgbaOutputFile file (fileName, width, height, Imf::WRITE_RGBA);
+    file.setFrameBuffer (pixels, 1, width);
+    file.writePixels (height);
+}
+
+void Camera::writeScene(const char filename[], vector<Surface *> surfaces) {
+    Imf::Array2D<Imf::Rgba> pixels;
+    pixels.resizeErase(heightPixels, widthPixels);
+
+    for (int y = 0; y < heightPixels; y++) {
+        for (int x = 0; x < widthPixels; x++) {
+            pixels[heightPixels - y - 1][x] = calculatePixel(x, y, surfaces);
+        }
+    }
+    writeRgba(filename, &pixels[0][0], widthPixels, heightPixels);
+}
+
