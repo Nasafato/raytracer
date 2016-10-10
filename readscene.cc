@@ -209,7 +209,7 @@ int main (int argc, char *argv[])
     vector<Surface *> surfaces;
     vector<Light *> lights;
     Camera camera = parseSceneFile (argv[1], surfaces, lights);
-    // camera.writeScene(argv[2], surfaces);
+    camera.writeScene(argv[2], surfaces, lights);
 
     for (int i = 0; i < surfaces.size(); i++) {
         delete surfaces[i];

@@ -47,6 +47,16 @@ float Sphere::intersect(Ray ray) {
         // std::cout << "A is " << a << ", B is " << b << ", C is " << cCoeff << std::endl;
 }
 
+Vec3 Sphere::getSurfaceNormal(Ray ray, float t) {
+    Vec3 unitNormal = (ray.origin.toVec3() + (ray.direction * t)) - center;
+    return unitNormal;
+}
+
+Vec3 Sphere::getPointLightVector(Ray ray, float t, PointLight light) {
+    Vec3 lightVector = light.position.toVec3() - (ray.origin.toVec3() + (ray.direction * t));
+    return lightVector;
+}
+
 void Sphere::print() {
     std::cout  << ", " << radius << std::endl;
 }

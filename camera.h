@@ -10,6 +10,7 @@
 #include "vec3.h"
 #include "point.h"
 #include "ray.h"
+#include "light.h"
 
 class Camera {
 public:
@@ -32,9 +33,9 @@ public:
     Camera();
     Camera(Point, Vec3, float, float, float, int, int);
     Ray getRayForPixel(int, int);
-    Imf::Rgba calculatePixel(int, int, std::vector<Surface *>);
+    Imf::Rgba calculatePixel(int, int, std::vector<Surface *>, std::vector<Light *>);
     void writeRgba(const char[], const Imf::Rgba *, int, int);
-    void writeScene(const char[], std::vector<Surface *>);
+    void writeScene(const char[], std::vector<Surface *>, std::vector<Light *>);
 
 };
 
