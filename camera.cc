@@ -24,7 +24,7 @@ Camera::Camera() {
     b = 0;
 }
 
-Camera::Camera(Point pos, Vec3 dir, float d, float iw, float ih, int wp, int hp) {
+Camera::Camera(Point pos, Vec3 dir, double d, double iw, double ih, int wp, int hp) {
     eye = pos;
 
     direction = dir;
@@ -42,10 +42,10 @@ Camera::Camera(Point pos, Vec3 dir, float d, float iw, float ih, int wp, int hp)
     imageWidth = iw;
     imageHeight = ih;
 
-    l = -(iw / 2);
-    r = iw / 2;
-    t = ih / 2;
-    b = -(ih / 2);
+    l = -(iw / 2.0);
+    r = iw / 2.0;
+    t = ih / 2.0;
+    b = -(ih / 2.0);
 
     std::cout << "l: " << l << ", r: " << r << ", t: " << t << ", b: " << b << std::endl;
 
@@ -54,8 +54,8 @@ Camera::Camera(Point pos, Vec3 dir, float d, float iw, float ih, int wp, int hp)
 }
 
 Ray Camera::getRayForPixel(int x, int y) {
-    float uScalar = l + (r - l) * (x + 0.5) / widthPixels;
-    float vScalar = b + (t - b) * (y + 0.5) / heightPixels;
+    double uScalar = l + (r - l) * (x + 0.5) / widthPixels;
+    double vScalar = t + (b - t) * (y + 0.5) / heightPixels;
     Vec3 dir = w * (-focalLength) + u * uScalar + v * vScalar;
     dir.normalize();
 
@@ -65,8 +65,8 @@ Ray Camera::getRayForPixel(int x, int y) {
 Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vector<Light *> lights) {
     Ray ray = getRayForPixel(x, y);
     Imf::Rgba rgba = Imf::Rgba(0.0, 0.0, 0.0, 1.0);
-    float minT = std::numeric_limits<float>::max();
-    float testT;
+    double minT = std::numeric_limits<double>::max();
+    double testT;
     bool intersected = false;
     Surface* closestSurface = surfaces[0];
 
@@ -101,7 +101,7 @@ void Camera::writeScene(const char filename[], vector<Surface *> surfaces, vecto
 
     for (int y = 0; y < heightPixels; y++) {
         for (int x = 0; x < widthPixels; x++) {
-            pixels[heightPixels - y - 1][x] = calculatePixel(x, y, surfaces, lights);
+            pixels[y][x] = calculatePixel(x, y, surfaces, lights);
         }
     }
     writeRgba(filename, &pixels[0][0], widthPixels, heightPixels);

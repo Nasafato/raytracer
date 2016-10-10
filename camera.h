@@ -21,17 +21,17 @@ public:
     Vec3 v;
     Vec3 w;
 
-    float l, r, t, b;
+    double l, r, t, b;
 
-    float focalLength;
+    double focalLength;
 
-    float imageWidth;
-    float imageHeight;
+    double imageWidth;
+    double imageHeight;
     int widthPixels;
     int heightPixels;
 
     Camera();
-    Camera(Point, Vec3, float, float, float, int, int);
+    Camera(Point, Vec3, double, double, double, int, int);
     Ray getRayForPixel(int, int);
     Imf::Rgba calculatePixel(int, int, std::vector<Surface *>, std::vector<Light *>);
     void writeRgba(const char[], const Imf::Rgba *, int, int);
