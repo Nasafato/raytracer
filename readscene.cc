@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <limits>
 #include <ImfRgbaFile.h>
 #include <ImfStringAttribute.h>
 #include <ImfMatrixAttribute.h>
@@ -205,7 +206,6 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
                     case 'a':   // ambient light
                         break;
                 }
-
                 break;
 
             //
@@ -240,7 +240,6 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
                 cout << "parameters: " << ndr << ", " << ndg << ", " << ndb << endl;
             #endif
 
-
                 delete currentMaterial;
                 currentMaterial = new Material(ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr);
                 break;
@@ -265,13 +264,16 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
 Imf::Rgba calculatePixel(int x, int y, Camera camera, vector<Surface *> surfaces) {
     Ray ray = camera.getRayForPixel(x, y);
     Imf::Rgba rgba = Imf::Rgba(0.0, 0.0, 0.0, 1.0);
+    float minT = std::numeric_limits<float>::max();
+    float testT;
 
     for (int i = 0; i < surfaces.size(); i++) {
-        if (surfaces[i]->intersect(ray)) {
+        testT = surfaces[i]->intersect(ray);
+        if (testT < minT & testT != -1.0) {
+            minT = testT;
             rgba.r = surfaces[i]->material.dr;
             rgba.g = surfaces[i]->material.dg;
             rgba.b = surfaces[i]->material.db;
-            break;
         }
     }
 

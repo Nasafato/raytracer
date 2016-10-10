@@ -10,7 +10,7 @@ class Surface {
 
 public:
     Material material;
-    virtual bool intersect(Ray) = 0;
+    virtual float intersect(Ray) = 0;
     virtual void print() = 0;
 };
 
@@ -21,7 +21,7 @@ protected:
     float radius;
 
 public:
-    bool intersect(Ray);
+    float intersect(Ray);
     void print();
 
     Sphere(Vec3, float, Material *);
