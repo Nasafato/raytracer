@@ -26,20 +26,22 @@ Intersection Sphere::intersect(Ray ray) {
     double discriminantTermTwo = (e_c.dot(e_c) - (radius * radius)) * d_dot_d;
 
     double discriminant = discriminantTermOne - discriminantTermTwo;
+    // std::cout << "Discriminant: " << discriminant << std::endl;
+
 
     Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
 
     if (discriminant >= 0.0) {
         double firstTerm = d.reverse().dot(e_c);
-        double plusDiscriminant = (firstTerm + discriminant) / d_dot_d;
-        double minusDiscriminant = (firstTerm - discriminant) / d_dot_d;
+        double plusDiscriminant = (firstTerm + sqrt(discriminant)) / d_dot_d;
+        double minusDiscriminant = (firstTerm - sqrt(discriminant)) / d_dot_d;
         double minT = std::min(std::max(plusDiscriminant, (double)0.0), std::max(minusDiscriminant, (double)0.0));
 
         intersection.closestPoint_ = ray.origin + (ray.direction * minT);
         intersection.t_ = minT;
         intersection.intersected_ = true;
         intersection.discriminant_ = discriminant;
-        std::cout << "Closest point is " << intersection.closestPoint_ << std::endl;
+        // std::cout << "Closest point is " << intersection.closestPoint_ << std::endl;
     }
 
     return intersection;
