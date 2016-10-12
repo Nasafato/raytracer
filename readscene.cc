@@ -15,10 +15,10 @@ using namespace std;
 
 #define IM_DEBUGGING
 
-float getTokenAsFloat (string inString, int whichToken)
+double getTokenAsdouble (string inString, int whichToken)
 {
 
-    float thisFloatVal = 0.;    // the return value
+    double thisdoubleVal = 0.;    // the return value
 
     if (whichToken == 0) {
         cerr << "error: the first token on a line is a character!" << endl;
@@ -44,11 +44,11 @@ float getTokenAsFloat (string inString, int whichToken)
         }
     }
 
-    thisFloatVal = atof (p);
+    thisdoubleVal = atof (p);
 
     delete[] cstr;
 
-    return thisFloatVal;
+    return thisdoubleVal;
 }
 
 
@@ -75,11 +75,11 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
             case 's': {
                 // it's a sphere, load in the parameters
 
-                float x, y, z, r;
-                x = getTokenAsFloat (line, 1);
-                y = getTokenAsFloat (line, 2);
-                z = getTokenAsFloat (line, 3);
-                r = getTokenAsFloat (line, 4);
+                double x, y, z, r;
+                x = getTokenAsdouble (line, 1);
+                y = getTokenAsdouble (line, 2);
+                z = getTokenAsdouble (line, 3);
+                r = getTokenAsdouble (line, 4);
 
                 Point center = Point(x, y, z);
                 Sphere *sphere = new Sphere(center, r, currentMaterial);
@@ -100,22 +100,22 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
 
             // camera:
             case 'c': { // camera
-                float x, y, z, vx, vy, vz, d, iw, ih, pw, ph;
-                x = getTokenAsFloat (line, 1);
-                y = getTokenAsFloat (line, 2);
-                z = getTokenAsFloat (line, 3);
+                double x, y, z, vx, vy, vz, d, iw, ih, pw, ph;
+                x = getTokenAsdouble (line, 1);
+                y = getTokenAsdouble (line, 2);
+                z = getTokenAsdouble (line, 3);
 
-                vx = getTokenAsFloat (line, 4);
-                vy = getTokenAsFloat (line, 5);
-                vz = getTokenAsFloat (line, 6);
+                vx = getTokenAsdouble (line, 4);
+                vy = getTokenAsdouble (line, 5);
+                vz = getTokenAsdouble (line, 6);
 
-                d = getTokenAsFloat (line, 7);
+                d = getTokenAsdouble (line, 7);
 
-                iw = getTokenAsFloat (line, 8);
-                ih = getTokenAsFloat (line, 9);
+                iw = getTokenAsdouble (line, 8);
+                ih = getTokenAsdouble (line, 9);
 
-                pw = getTokenAsFloat (line, 10);
-                ph = getTokenAsFloat (line, 11);
+                pw = getTokenAsdouble (line, 10);
+                ph = getTokenAsdouble (line, 11);
 
                 Point position = Point(x, y, z);
                 Vec3 direction = Vec3(vx, vy, vz);
@@ -136,13 +136,13 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 // which is at the third position on the line:
                 switch (line[2]) {
                     case 'p': { // point light
-                        float x, y, z, r, g, b;
-                        x = getTokenAsFloat(line, 2);
-                        y = getTokenAsFloat(line, 3);
-                        z = getTokenAsFloat(line, 4);
-                        r = getTokenAsFloat(line, 5);
-                        g = getTokenAsFloat(line, 6);
-                        b = getTokenAsFloat(line, 7);
+                        double x, y, z, r, g, b;
+                        x = getTokenAsdouble(line, 2);
+                        y = getTokenAsdouble(line, 3);
+                        z = getTokenAsdouble(line, 4);
+                        r = getTokenAsdouble(line, 5);
+                        g = getTokenAsdouble(line, 6);
+                        b = getTokenAsdouble(line, 7);
                         cout << "x: " << x << ", y: " << y << ", z: " << z << ", r: " << r << ", g: " << g << ", b: " << b << endl;
                         PointLight *light = new PointLight(Point(x, y, z), r, g, b);
                         lights.push_back(light);
@@ -156,20 +156,20 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
 
             // materials:
             case 'm': {// material
-                float ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr;
-                ndr = getTokenAsFloat (line, 1);
-                ndg = getTokenAsFloat (line, 2);
-                ndb = getTokenAsFloat (line, 3);
+                double ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr;
+                ndr = getTokenAsdouble (line, 1);
+                ndg = getTokenAsdouble (line, 2);
+                ndb = getTokenAsdouble (line, 3);
 
-                nsr = getTokenAsFloat (line, 4);
-                nsg = getTokenAsFloat (line, 5);
-                nsb = getTokenAsFloat (line, 6);
+                nsr = getTokenAsdouble (line, 4);
+                nsg = getTokenAsdouble (line, 5);
+                nsb = getTokenAsdouble (line, 6);
 
-                nir = getTokenAsFloat (line, 7);
-                nig = getTokenAsFloat (line, 8);
-                nib = getTokenAsFloat (line, 9);
+                nr = getTokenAsdouble (line, 7);
 
-                nr = getTokenAsFloat (line, 10);
+                nir = getTokenAsdouble (line, 8);
+                nig = getTokenAsdouble (line, 9);
+                nib = getTokenAsdouble (line, 10);
 
             #ifdef IM_DEBUGGING
                 cout << "got a material with ";

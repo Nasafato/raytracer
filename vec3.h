@@ -7,15 +7,16 @@ class Vec3 {
 
 public:
     Vec3();
-    Vec3(float, float, float);
+    Vec3(double, double, double);
 
-    Vec3 operator * (const float&) const;
+    Vec3 operator * (const double&) const;
     Vec3 operator * (const Vec3&) const;
     Vec3 operator - (const Vec3&) const;
     Vec3 operator + (const Vec3&) const;
+    Vec3 operator / (const double&) const;
 
-    float magnitude() const;
-    float dot(const Vec3&) const;
+    double magnitude() const;
+    double dot(const Vec3&) const;
 
     Vec3 cross(const Vec3&) const;
     Vec3& normalize();
@@ -26,7 +27,7 @@ public:
         return os<<"<"<<v.x<<","<<v.y<<","<<v.z<<">";
     }
 
-    float x, y, z;
+    double x, y, z;
 };
 
 #endif

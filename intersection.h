@@ -10,6 +10,8 @@ public:
     double discriminant_;
     double t_;
     Point closestPoint_;
+    Vec3 surfaceNormal_;
+    Intersection();
     Intersection(bool, double, double, Point);
 };
 

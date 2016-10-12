@@ -1,5 +1,4 @@
 #include "camera.h"
-#include "intersection.h"
 #include <iostream>
 
 using namespace std;
@@ -67,35 +66,50 @@ Ray Camera::getRayForPixel(int x, int y) {
     return Ray(eye, dir);
 }
 
+void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection, Material material, vector<Light *> lights) {
+    PointLight *light = (PointLight *)lights[0];
+    Vec3 lightVector = (light->position - intersection.closestPoint_).normalize();
+    Vec3 normal = intersection.surfaceNormal_;
+    // Vec3 v = (eye - intersection.closestPoint_).normalize();
+    Vec3 v = ray.direction.reverse().normalize();
+    Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
+    double phong = material.r;
+    // std::cout << "light " << lightVector << ", normal " << normal << std::endl;
+    double zero = 0.0;
+
+    rgba[0] = material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong);
+    rgba[1] = material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong);
+    rgba[2] = material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong);
+    // std::cout << material << std::endl;
+    // std::cout << ", red lamb is " << rgba[0];
+}
+
 Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vector<Light *> lights) {
     Ray ray = getRayForPixel(x, y);
-    Imf::Rgba rgba = Imf::Rgba(0.0, 0.0, 0.0, 1.0);
+    Imf::Rgba rgba = Imf::Rgba(0.5, 0.5, 0.5, 1.0);
     double minT = std::numeric_limits<double>::max();
-    bool intersected = false;
+    Intersection currentIntersection;
     Surface* closestSurface = NULL;
-
-    Material material;
     for (int i = 0; i < surfaces.size(); i++) {
         Intersection intersection = surfaces[i]->intersect(ray);
-        // std::cout << "Discriminant is " << discriminant << std::endl;
-        if (intersection.intersected_) {
-            intersected = true;
-            if (intersection.t_ < minT) {
-                minT = intersection.t_;
-                material = surfaces[i]->material;
-            }
+        if (intersection.intersected_ && intersection.t_ < minT) {
+            minT = intersection.t_;
+            closestSurface = surfaces[i];
+            currentIntersection = intersection;
         }
     }
 
-    if (intersected) {
-        // Vec3 surfaceNormal = closestSurface->getSurfaceNormal(ray, minT);
+    if (currentIntersection.intersected_) {
+        double rgbaValues[] = {0.0, 0.0, 0.0};
+        // std::cout << "now, material.dr is " << closestSurface->material.dr << ": ";
+        calculateShading(rgbaValues, ray, currentIntersection, closestSurface->material, lights);
         // rgba.r = closestSurface->material.dr;
         // rgba.g = closestSurface->material.dg;
         // rgba.b = closestSurface->material.db;
-        rgba.r = material.dr;
-        rgba.g = material.dg;
-        rgba.b = material.db;
-
+        rgba.r = rgbaValues[0];
+        // std::cout << ", but read as " << rgba.r << std::endl;
+        rgba.g = rgbaValues[1];
+        rgba.b = rgbaValues[2];
     }
 
     return rgba;

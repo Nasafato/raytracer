@@ -7,7 +7,7 @@ PointLight::PointLight() {
     b = 0.0;
 }
 
-PointLight::PointLight(Point pos, float nr, float ng, float nb) {
+PointLight::PointLight(Point pos, double nr, double ng, double nb) {
     position = pos;
     r = nr;
     g = ng;

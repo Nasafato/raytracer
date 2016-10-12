@@ -6,14 +6,14 @@
 class Light {
 
 public:
-    float r, g, b;
+    double r, g, b;
 };
 
 class PointLight: public Light {
 public:
     Point position;
     PointLight();
-    PointLight(Point, float, float, float);
+    PointLight(Point, double, double, double);
 };
 
 #endif

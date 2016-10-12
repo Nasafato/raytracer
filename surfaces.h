@@ -12,8 +12,6 @@ class Surface {
 
 public:
     Material material;
-    virtual Vec3 getSurfaceNormal(Ray, float) = 0;
-    virtual Vec3 getPointLightVector(Ray, float, PointLight) = 0;
     virtual Intersection intersect(Ray) = 0;
     virtual void print() = 0;
 };
@@ -22,15 +20,13 @@ class Sphere: public Surface {
 
 protected:
     Point center;
-    float radius;
+    double radius;
 
 public:
     Intersection intersect(Ray);
     void print();
-    Vec3 getSurfaceNormal(Ray, float);
-    Vec3 getPointLightVector(Ray, float, PointLight);
 
-    Sphere(Point, float, Material *);
+    Sphere(Point, double, Material *);
 };
 
 #endif
