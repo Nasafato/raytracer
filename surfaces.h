@@ -6,6 +6,7 @@
 #include "ray.h"
 #include "material.h"
 #include "light.h"
+#include "intersection.h"
 
 class Surface {
 
@@ -13,23 +14,23 @@ public:
     Material material;
     virtual Vec3 getSurfaceNormal(Ray, float) = 0;
     virtual Vec3 getPointLightVector(Ray, float, PointLight) = 0;
-    virtual float intersect(Ray) = 0;
+    virtual Intersection intersect(Ray) = 0;
     virtual void print() = 0;
 };
 
 class Sphere: public Surface {
 
 protected:
-    Vec3 center;
+    Point center;
     float radius;
 
 public:
-    float intersect(Ray);
+    Intersection intersect(Ray);
     void print();
     Vec3 getSurfaceNormal(Ray, float);
     Vec3 getPointLightVector(Ray, float, PointLight);
 
-    Sphere(Vec3, float, Material *);
+    Sphere(Point, float, Material *);
 };
 
 #endif

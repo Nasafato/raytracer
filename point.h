@@ -14,6 +14,7 @@ public:
     void setY(float);
     void setZ(float) ;
     Vec3 operator- (const Point&) const;
+    Point operator+ (const Vec3 &v) const;
 
     Vec3 toVec3();
     friend std::ostream &operator<<(std::ostream &os, Point &p) {

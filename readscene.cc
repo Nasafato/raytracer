@@ -81,7 +81,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 z = getTokenAsFloat (line, 3);
                 r = getTokenAsFloat (line, 4);
 
-                Vec3 center = Vec3(x, y, z);
+                Point center = Point(x, y, z);
                 Sphere *sphere = new Sphere(center, r, currentMaterial);
                 surfaces.push_back(sphere);
 

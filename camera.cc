@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "intersection.h"
 #include <iostream>
 
 using namespace std;
@@ -26,17 +27,21 @@ Camera::Camera() {
 
 Camera::Camera(Point pos, Vec3 dir, double d, double iw, double ih, int wp, int hp) {
     eye = pos;
-
+    w = dir.reverse();
+    w.normalize();
     direction = dir;
 
-    u = direction.cross(Vec3(0.0, 1.0, 0.0));
+    if (1.0 - fabs(w.y) < 0.0001) {
+        u = Vec3(1.0, 0.0, 0.0);
+        v = w.cross(u);
+    } else {
+        Vec3 up = Vec3(0.0, 1.0, 0.0);
+        u = up.cross(w);
+        v = w.cross(u);
+    }
+
     u.normalize();
-
-    v = u.cross(direction);
     v.normalize();
-
-    w = direction * -1.0;
-    w.normalize();
 
     focalLength = d;
     imageWidth = iw;
@@ -47,7 +52,7 @@ Camera::Camera(Point pos, Vec3 dir, double d, double iw, double ih, int wp, int 
     t = ih / 2.0;
     b = -(ih / 2.0);
 
-    std::cout << "l: " << l << ", r: " << r << ", t: " << t << ", b: " << b << std::endl;
+    // std::cout << "l: " << l << ", r: " << r << ", t: " << t << ", b: " << b << std::endl;
 
     widthPixels = wp;
     heightPixels = hp;
@@ -56,7 +61,7 @@ Camera::Camera(Point pos, Vec3 dir, double d, double iw, double ih, int wp, int 
 Ray Camera::getRayForPixel(int x, int y) {
     double uScalar = l + (r - l) * (x + 0.5) / widthPixels;
     double vScalar = t + (b - t) * (y + 0.5) / heightPixels;
-    Vec3 dir = w * (-focalLength) + u * uScalar + v * vScalar;
+    Vec3 dir = w * (-focalLength) + (u * uScalar) + (v * vScalar);
     dir.normalize();
 
     return Ray(eye, dir);
@@ -70,17 +75,25 @@ Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vecto
     bool intersected = false;
     Surface* closestSurface = surfaces[0];
 
-    for (int i = 0; i < surfaces.size(); i++) {
-        testT = surfaces[i]->intersect(ray);
-        if (testT != -1.0 & testT < minT) {
-            minT = testT;
-            closestSurface = surfaces[i];
+    // for (int i = 0; i < surfaces.size(); i++) {
+    //     testT = surfaces[i]->intersect(ray);
+    //     if (testT != -1.0 & testT < minT) {
+    //         minT = testT;
+    //         closestSurface = surfaces[i];
+    //         intersected = true;
+    //     }
+    // }
+    for (int i = 0; i < surfaces.size() && !intersected; i++) {
+        Intersection intersection = surfaces[i]->intersect(ray);
+        // std::cout << "Discriminant is " << discriminant << std::endl;
+        if (intersection.intersected_) {
             intersected = true;
+            closestSurface = surfaces[i];
         }
     }
 
     if (intersected) {
-        Vec3 surfaceNormal = closestSurface->getSurfaceNormal(ray, minT);
+        // Vec3 surfaceNormal = closestSurface->getSurfaceNormal(ray, minT);
         rgba.r = closestSurface->material.dr;
         rgba.g = closestSurface->material.dg;
         rgba.b = closestSurface->material.db;

@@ -26,7 +26,6 @@ public:
         return os<<"<"<<v.x<<","<<v.y<<","<<v.z<<">";
     }
 
-private:
     float x, y, z;
 };
 

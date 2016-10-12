@@ -2,17 +2,17 @@
 #include <cmath>
 #include "surfaces.h"
 
-Sphere::Sphere(Vec3 ncenter, float nradius, Material* nm) {
+Sphere::Sphere(Point ncenter, float nradius, Material* nm) {
     center = ncenter;
     radius = nradius;
     material = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
 }
 
-float Sphere::intersect(Ray ray) {
+Intersection Sphere::intersect(Ray ray) {
 
+    Vec3 e_c = ray.origin - center;
     Vec3 d = ray.direction;
-    Vec3 e = ray.origin.toVec3();
-    Vec3 c = center;
+    double d_dot_d = d.dot(d);
 
 /*
     std::cout << "ray direction is ";
@@ -22,33 +22,33 @@ float Sphere::intersect(Ray ray) {
     std::cout << "circle center is ";
     c.print();
     */
+    double discriminantTermOne = d.dot(e_c) * d.dot(e_c);
+    double discriminantTermTwo = (e_c.dot(e_c) - (radius * radius)) * d_dot_d;
 
-    float a = (d.dot(d));
-    float b = (d * 2.0).dot((e - c));
-    float cCoeff = (e - c).dot((e - c)) - radius * radius;
+    double discriminant = discriminantTermOne - discriminantTermTwo;
 
+    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
 
-    float discriminant = b * b - 4 * a * cCoeff;
-        // std::cout << "Discriminant is " << discriminant << std::endl;
     if (discriminant >= 0.0) {
-        float t = (-b + discriminant) / (2 * a);
-        float t_2 = (-b - discriminant) / (2 * a);
-        // std::cout << "t is " << t << ", t_2 is " << t_2 << std::endl;
-        if (t < t_2) {
-            return t;
-        } else {
-            return t_2;
-        }
-    } else {
-        return -1.0;
+        double firstTerm = d.reverse().dot(e_c);
+        double plusDiscriminant = (firstTerm + discriminant) / d_dot_d;
+        double minusDiscriminant = (firstTerm - discriminant) / d_dot_d;
+        double minT = std::min(std::max(plusDiscriminant, (double)0.0), std::max(minusDiscriminant, (double)0.0));
+
+        intersection.closestPoint_ = ray.origin + (ray.direction * minT);
+        intersection.t_ = minT;
+        intersection.intersected_ = true;
+        intersection.discriminant_ = discriminant;
+        std::cout << "Closest point is " << intersection.closestPoint_ << std::endl;
     }
 
-    return discriminant;
+    return intersection;
         // std::cout << "A is " << a << ", B is " << b << ", C is " << cCoeff << std::endl;
 }
 
 Vec3 Sphere::getSurfaceNormal(Ray ray, float t) {
-    Vec3 unitNormal = (ray.origin.toVec3() + (ray.direction * t)) - center;
+    // Vec3 unitNormal = (ray.origin.toVec3() + (ray.direction * t)) - center;
+    Vec3 unitNormal = Vec3(0.0, 0.0, 0.0);
     return unitNormal;
 }
 
