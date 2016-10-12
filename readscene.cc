@@ -95,8 +95,24 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
             case 't':   // triangle
                 break;
 
-            case 'p':   // plane
+            case 'p': {  // plane
+                double x, y, z, d;
+                x = getTokenAsdouble (line, 1);
+                y = getTokenAsdouble (line, 2);
+                z = getTokenAsdouble (line, 3);
+                d = getTokenAsdouble (line, 4);
+
+                Vec3 normal = Vec3(x, y, z);
+                Plane *plane = new Plane(normal, d, currentMaterial);
+                surfaces.push_back(plane);
+
+#ifdef IM_DEBUGGING
+                cout << "got a plane with ";
+                cout << "parameters: " << x << " " << y << " " << z << " " << d << endl;
+#endif
+
                 break;
+            }
 
             // camera:
             case 'c': { // camera

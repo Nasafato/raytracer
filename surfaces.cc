@@ -6,7 +6,6 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
     center = ncenter;
     radius = nradius;
     material = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
-    std::cout << "material for sphere is " << material << std::endl;
 }
 
 Intersection Sphere::intersect(Ray ray) {

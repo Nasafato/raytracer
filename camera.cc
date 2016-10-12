@@ -76,17 +76,18 @@ void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection
     double phong = material.r;
     // std::cout << "light " << lightVector << ", normal " << normal << std::endl;
     double zero = 0.0;
+    double attentuationFactor = 1.0 / pow((light->position - intersection.closestPoint_).magnitude(), 2.0);
 
-    rgba[0] = material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong);
-    rgba[1] = material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong);
-    rgba[2] = material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong);
+    rgba[0] = material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong) * attentuationFactor;
+    rgba[1] = material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong) * attentuationFactor;
+    rgba[2] = material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong) * attentuationFactor;
     // std::cout << material << std::endl;
     // std::cout << ", red lamb is " << rgba[0];
 }
 
 Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vector<Light *> lights) {
     Ray ray = getRayForPixel(x, y);
-    Imf::Rgba rgba = Imf::Rgba(0.5, 0.5, 0.5, 1.0);
+    Imf::Rgba rgba = Imf::Rgba(0.2, 0.2, 0.2, 1.0);
     double minT = std::numeric_limits<double>::max();
     Intersection currentIntersection;
     Surface* closestSurface = NULL;

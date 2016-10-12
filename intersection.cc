@@ -1,6 +1,10 @@
 #include "intersection.h"
 
 Intersection::Intersection() {
+    intersected_ = false;
+    discriminant_ = 0.0;
+    t_ = 0.0;
+    closestPoint_ = Point();
 
 }
 

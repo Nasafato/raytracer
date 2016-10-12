@@ -13,7 +13,6 @@ class Surface {
 public:
     Material material;
     virtual Intersection intersect(Ray) = 0;
-    virtual void print() = 0;
 };
 
 class Sphere: public Surface {
