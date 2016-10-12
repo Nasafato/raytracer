@@ -159,7 +159,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                         r = getTokenAsdouble(line, 5);
                         g = getTokenAsdouble(line, 6);
                         b = getTokenAsdouble(line, 7);
-                        cout << "x: " << x << ", y: " << y << ", z: " << z << ", r: " << r << ", g: " << g << ", b: " << b << endl;
+                        // cout << "x: " << x << ", y: " << y << ", z: " << z << ", r: " << r << ", g: " << g << ", b: " << b << endl;
                         PointLight *light = new PointLight(Point(x, y, z), r, g, b);
                         lights.push_back(light);
                     }
