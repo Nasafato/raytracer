@@ -16,14 +16,16 @@ Intersection Plane::intersect(Ray ray) {
     }
 
     double t = numerator / denominator;
-    Point p = ray.origin + (ray.direction * t);
-    Vec3 normal = normal_;
-    normal.normalize();
+    if (t >= 0.0) {
+        Point p = ray.origin + (ray.direction * t);
+        Vec3 normal = normal_;
+        normal.normalize();
 
-    intersection.intersected_ = true;
-    intersection.t_ = t;
-    intersection.closestPoint_ = p;
-    intersection.surfaceNormal_ = normal;
+        intersection.intersected_ = true;
+        intersection.t_ = t;
+        intersection.closestPoint_ = p;
+        intersection.surfaceNormal_ = normal;
+    }
 
     return intersection;
 
