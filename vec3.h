@@ -1,6 +1,8 @@
 #ifndef VEC3_H
 #define VEC3_H
 
+#include <iostream>
+
 class Vec3 {
 
 public:
@@ -18,6 +20,11 @@ public:
     Vec3 cross(const Vec3&) const;
     Vec3& normalize();
     void print() const;
+    Vec3 reverse() const;
+
+    friend std::ostream &operator<<(std::ostream &os, Vec3 &v) {
+        return os<<"<"<<v.x<<","<<v.y<<","<<v.z<<">";
+    }
 
 private:
     float x, y, z;

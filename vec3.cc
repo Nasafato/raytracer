@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include "vec3.h"
 
 
@@ -31,6 +30,10 @@ Vec3 Vec3::operator + (const Vec3& v) const {
     return Vec3(x + v.x, y + v.y, z + v.z);
 }
 
+Vec3 Vec3::reverse() const {
+    return Vec3(x * -1.0, y * -1.0, z * -1.0);
+}
+
 float Vec3::magnitude() const {
     return sqrt(x * x + y * y + z * z);
 }
@@ -53,7 +56,6 @@ Vec3& Vec3::normalize() {
     y /= mag;
     z /= mag;
     return *this;
-
 }
 
 void Vec3::print() const {

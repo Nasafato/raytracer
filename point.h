@@ -13,7 +13,12 @@ public:
     void setX(float);
     void setY(float);
     void setZ(float) ;
+    Vec3 operator- (const Point&) const;
+
     Vec3 toVec3();
+    friend std::ostream &operator<<(std::ostream &os, Point &p) {
+        return os<<"<"<<p.x<<","<<p.y<<","<<p.z<<">";
+    }
 };
 
 #endif
