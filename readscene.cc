@@ -92,9 +92,34 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 break;
             }
 
-            case 't':   // triangle
+            case 't': {   // x1 y1 z1 x2 y2 z2 x3 y3 z3
+                double x1, y1, z1;
+                double x2, y2, z2;
+                double x3, y3, z3;
+                x1 = getTokenAsdouble(line, 1);
+                y1 = getTokenAsdouble(line, 2);
+                z1 = getTokenAsdouble(line, 3);
+                x2 = getTokenAsdouble(line, 4);
+                y2 = getTokenAsdouble(line, 5);
+                z2 = getTokenAsdouble(line, 6);
+                x3 = getTokenAsdouble(line, 7);
+                y3 = getTokenAsdouble(line, 8);
+                z3 = getTokenAsdouble(line, 9);
+
+                Point p1 = Point(x1, y1, z1);
+                Point p2 = Point(x2, y2, z2);
+                Point p3 = Point(x3, y3, z3);
+
+                Vec3 u = p1 - p2;
+                Vec3 v = p3 - p1;
+                Vec3 normal = u.cross(v);
+                normal.normalize();
+
+                Triangle *triangle = new Triangle(p1, p2, p3, normal, currentMaterial);
+                surfaces.push_back(triangle);
                 break;
 
+            }
             case 'p': {  // plane
                 double x, y, z, d;
                 x = getTokenAsdouble (line, 1);
