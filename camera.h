@@ -1,9 +1,17 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <ImfRgbaFile.h>
+#include <ImfStringAttribute.h>
+#include <ImfMatrixAttribute.h>
+#include <ImfArray.h>
+#include <vector>
+#include "surfaces.h"
 #include "vec3.h"
 #include "point.h"
 #include "ray.h"
+#include "light.h"
+#include "intersection.h"
 
 class Camera {
 public:
@@ -14,18 +22,23 @@ public:
     Vec3 v;
     Vec3 w;
 
-    float l, r, t, b;
+    double l, r, t, b;
 
-    float focalLength;
+    double focalLength;
 
-    float imageWidth;
-    float imageHeight;
+    double imageWidth;
+    double imageHeight;
     int widthPixels;
     int heightPixels;
 
     Camera();
-    Camera(Point, Vec3, float, float, float, int, int);
+    Camera(Point, Vec3, double, double, double, int, int);
     Ray getRayForPixel(int, int);
+    Imf::Rgba calculatePixel(int, int, std::vector<Surface *>, std::vector<Light *>);
+    void calculateShading(double[3], Ray, Intersection, Material, std::vector<Light *>);
+    void writeRgba(const char[], const Imf::Rgba *, int, int);
+    void writeScene(const char[], std::vector<Surface *>, std::vector<Light *>);
+
 };
 
 

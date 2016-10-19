@@ -5,26 +5,27 @@
 #include "point.h"
 #include "ray.h"
 #include "material.h"
+#include "light.h"
+#include "intersection.h"
 
 class Surface {
 
 public:
     Material material;
-    virtual bool intersect(Ray) = 0;
-    virtual void print() = 0;
+    virtual Intersection intersect(Ray) = 0;
 };
 
 class Sphere: public Surface {
 
 protected:
-    Vec3 center;
-    float radius;
+    Point center;
+    double radius;
 
 public:
-    bool intersect(Ray);
+    Intersection intersect(Ray);
     void print();
 
-    Sphere(Vec3, float, Material *);
+    Sphere(Point, double, Material *);
 };
 
 #endif

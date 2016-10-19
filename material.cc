@@ -14,7 +14,7 @@ Material::Material()
     r = 0.5;
 }
 
-Material::Material(float ndr, float ndg, float ndb, float nsr, float nsg, float nsb, float nir, float nig, float nib, float nr)
+Material::Material(double ndr, double ndg, double ndb, double nsr, double nsg, double nsb, double nir, double nig, double nib, double nr)
 {
     dr = ndr;
     dg = ndg;

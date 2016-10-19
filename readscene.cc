@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <limits>
 #include <ImfRgbaFile.h>
 #include <ImfStringAttribute.h>
 #include <ImfMatrixAttribute.h>
@@ -14,19 +15,10 @@ using namespace std;
 
 #define IM_DEBUGGING
 
-
-// this is called from the parseSceneFile function, which uses
-// it to get the float from the correspoding position on the line.
-//
-// return the corresponding token in the inString. Errors out
-// if you've asked for more than are in the line.
-//
-// you really don't need to know what is going on in here, I think.
-//
-float getTokenAsFloat (string inString, int whichToken)
+double getTokenAsdouble (string inString, int whichToken)
 {
 
-    float thisFloatVal = 0.;    // the return value
+    double thisdoubleVal = 0.;    // the return value
 
     if (whichToken == 0) {
         cerr << "error: the first token on a line is a character!" << endl;
@@ -52,40 +44,16 @@ float getTokenAsFloat (string inString, int whichToken)
         }
     }
 
-    thisFloatVal = atof (p);
+    thisdoubleVal = atof (p);
 
     delete[] cstr;
 
-    return thisFloatVal;
+    return thisdoubleVal;
 }
 
 
-//
 // read the scene file.
-//
-// You'll need a few globals (or add arguments to this function): for the
-// list of surfaces (geometric objects like spheres, triangles, planes) and
-// another for the lights. These can be of type std::vector. You'll also
-// need a global (or other parameter) for the camera.
-//
-// This should be pretty self-explanatory: it reads through the lines, and
-// using the first character figures out what kind of command it is. It
-// then calls the "getTokenAsFloat" routine to pull out the needed values.
-// NOTE: since different commands take different number of arguments, you
-// must take care not to call getTokenAsFloat for an index that is beyond the
-// end of the line!
-//
-// One tricky bit: when a material is read in, we want
-// to keep a pointer to it so that for the next geometric object read in ,
-// we can add that material to the object. In the code that follows, I use the
-// variable "lastSurfaceLoaded" to do that, but the code is commented out since
-// I don't know the class names you will be using.
-//
-// Very minimal error check here. You might improve it slightly, but we'll
-// only use "correct" scene files.
-//
-//
-Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
+Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::vector<Light *>& lights)
 {
     Camera camera;
     Material* currentMaterial = new Material();
@@ -98,51 +66,26 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
         exit (-1);
     }
 
-    // Note: you'll have to keep track of whatever the last material
-    // you loaded in was, so you can apply it to any geometry that gets loaded.
-    // So here, you'll have something like:
-    //
-    // myMaterialClass *lastMaterialLoaded = 0;  // 0 or maybe a default material?
-    //
-    // and each time you load in a new piece of geometry (sphere, triangle, plane)
-    // you will set its material to lastMaterialLoaded.
-
-
     while (! inFile.eof ()) {   // go through every line in the file until finished
 
         getline (inFile, line); // get the line
 
         switch (line[0])  {     // we'll decide which command based on the first character
 
-            //
-            // geometry types:
-            //
-            // NOTE: whichever type of geo you load in, set its material to
-            // be "lastMaterialLoaded"
-            //
             case 's': {
                 // it's a sphere, load in the parameters
 
-                float x, y, z, r;
-                x = getTokenAsFloat (line, 1);
-                y = getTokenAsFloat (line, 2);
-                z = getTokenAsFloat (line, 3);
-                r = getTokenAsFloat (line, 4);
+                double x, y, z, r;
+                x = getTokenAsdouble (line, 1);
+                y = getTokenAsdouble (line, 2);
+                z = getTokenAsdouble (line, 3);
+                r = getTokenAsdouble (line, 4);
 
-                // build your sphere here from the parameters
-                // i.e. you must call your sphere constructor and set its position
-                // and radius from the above values. You must also put your new
-                // sphere into the objects list (which can be global)
-                // So something like;
-                // mySphereClass *ms = new mySphereClass (x, y, z, r);   // make a new instance of your sphere class
-                // ms->setMaterial (lastMaterialLoaded)
-                // objectsList->push_back (ms);  // objectsList is a global std:vector<surface *> for example.
-                Vec3 center = Vec3(x, y, z);
+                Point center = Point(x, y, z);
                 Sphere *sphere = new Sphere(center, r, currentMaterial);
                 surfaces.push_back(sphere);
 
 #ifdef IM_DEBUGGING
-                // if we're debugging, show what we got:
                 cout << "got a sphere with ";
                 cout << "parameters: " << x << " " << y << " " << z << " " << r << endl;
 #endif
@@ -152,31 +95,43 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
             case 't':   // triangle
                 break;
 
-            case 'p':   // plane
+            case 'p': {  // plane
+                double x, y, z, d;
+                x = getTokenAsdouble (line, 1);
+                y = getTokenAsdouble (line, 2);
+                z = getTokenAsdouble (line, 3);
+                d = getTokenAsdouble (line, 4);
+
+                Vec3 normal = Vec3(x, y, z);
+                Plane *plane = new Plane(normal, d, currentMaterial);
+                surfaces.push_back(plane);
+
+#ifdef IM_DEBUGGING
+                cout << "got a plane with ";
+                cout << "parameters: " << x << " " << y << " " << z << " " << d << endl;
+#endif
+
                 break;
+            }
 
-            //
             // camera:
-            //
             case 'c': { // camera
-                // one trick here: the cameras pixel count (width, height) are integers,
-                // so cast them.
-                float x, y, z, vx, vy, vz, d, iw, ih, pw, ph;
-                x = getTokenAsFloat (line, 1);
-                y = getTokenAsFloat (line, 2);
-                z = getTokenAsFloat (line, 3);
+                double x, y, z, vx, vy, vz, d, iw, ih, pw, ph;
+                x = getTokenAsdouble (line, 1);
+                y = getTokenAsdouble (line, 2);
+                z = getTokenAsdouble (line, 3);
 
-                vx = getTokenAsFloat (line, 4);
-                vy = getTokenAsFloat (line, 5);
-                vz = getTokenAsFloat (line, 6);
+                vx = getTokenAsdouble (line, 4);
+                vy = getTokenAsdouble (line, 5);
+                vz = getTokenAsdouble (line, 6);
 
-                d = getTokenAsFloat (line, 7);
+                d = getTokenAsdouble (line, 7);
 
-                iw = getTokenAsFloat (line, 8);
-                ih = getTokenAsFloat (line, 9);
+                iw = getTokenAsdouble (line, 8);
+                ih = getTokenAsdouble (line, 9);
 
-                pw = getTokenAsFloat (line, 10);
-                ph = getTokenAsFloat (line, 11);
+                pw = getTokenAsdouble (line, 10);
+                ph = getTokenAsdouble (line, 11);
 
                 Point position = Point(x, y, z);
                 Vec3 direction = Vec3(vx, vy, vz);
@@ -190,56 +145,52 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
                 break;
             }
 
-            //
             // lights:
-            //
             case 'l':   // light
 
                 // slightly different from the rest, we need to examine the second param,
                 // which is at the third position on the line:
                 switch (line[2]) {
-                    case 'p':   // point light
-                        break;
+                    case 'p': { // point light
+                        double x, y, z, r, g, b;
+                        x = getTokenAsdouble(line, 2);
+                        y = getTokenAsdouble(line, 3);
+                        z = getTokenAsdouble(line, 4);
+                        r = getTokenAsdouble(line, 5);
+                        g = getTokenAsdouble(line, 6);
+                        b = getTokenAsdouble(line, 7);
+                        // cout << "x: " << x << ", y: " << y << ", z: " << z << ", r: " << r << ", g: " << g << ", b: " << b << endl;
+                        PointLight *light = new PointLight(Point(x, y, z), r, g, b);
+                        lights.push_back(light);
+                    }
                     case 'd':   // directional light
                         break;
                     case 'a':   // ambient light
                         break;
                 }
-
                 break;
 
-            //
             // materials:
-            //
             case 'm': {// material
-                // the trick here: we should keep a pointer to the last material we read in,
-                // so we can apply it to any subsequent geometry. Say it's called "lastMaterialLoaded"
-                // we migh then do something like this:
-                //
-                //  1. read in the 10 material parameters: dr, dg, db, sr, sg, sb, r, ir, ig, ib
-                //  2. call lastMaterialLoaded->setMaterial(dr, dg, db,...);
-                //
+                double ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr;
+                ndr = getTokenAsdouble (line, 1);
+                ndg = getTokenAsdouble (line, 2);
+                ndb = getTokenAsdouble (line, 3);
 
-                float ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr;
-                ndr = getTokenAsFloat (line, 1);
-                ndg = getTokenAsFloat (line, 2);
-                ndb = getTokenAsFloat (line, 3);
+                nsr = getTokenAsdouble (line, 4);
+                nsg = getTokenAsdouble (line, 5);
+                nsb = getTokenAsdouble (line, 6);
 
-                nsr = getTokenAsFloat (line, 4);
-                nsg = getTokenAsFloat (line, 5);
-                nsb = getTokenAsFloat (line, 6);
+                nr = getTokenAsdouble (line, 7);
 
-                nir = getTokenAsFloat (line, 7);
-                nig = getTokenAsFloat (line, 8);
-                nib = getTokenAsFloat (line, 9);
-
-                nr = getTokenAsFloat (line, 10);
+                nir = getTokenAsdouble (line, 8);
+                nig = getTokenAsdouble (line, 9);
+                nib = getTokenAsdouble (line, 10);
 
             #ifdef IM_DEBUGGING
                 cout << "got a material with ";
                 cout << "parameters: " << ndr << ", " << ndg << ", " << ndb << endl;
             #endif
-
 
                 delete currentMaterial;
                 currentMaterial = new Material(ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr);
@@ -262,37 +213,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces)
     return camera;
 }
 
-Imf::Rgba calculatePixel(int x, int y, Camera camera, vector<Surface *> surfaces) {
-    Ray ray = camera.getRayForPixel(x, y);
-    Imf::Rgba rgba = Imf::Rgba(0.0, 0.0, 0.0, 1.0);
 
-    for (int i = 0; i < surfaces.size(); i++) {
-        if (surfaces[i]->intersect(ray)) {
-            rgba.r = surfaces[i]->material.dr;
-            rgba.g = surfaces[i]->material.dg;
-            rgba.b = surfaces[i]->material.db;
-            break;
-        }
-    }
-
-    return rgba;
-}
-
-void
-writeRgba (const char fileName[],
-           const Imf::Rgba *pixels,
-           int width,
-           int height)
-{
-    Imf::RgbaOutputFile file (fileName, width, height, Imf::WRITE_RGBA);
-    file.setFrameBuffer (pixels, 1, width);
-    file.writePixels (height);
-}
-
-//
-// the main just makes sure that there is an argument passed, which is
-// supposed to be the scenefile.
-//
 int main (int argc, char *argv[])
 {
 
@@ -302,17 +223,9 @@ int main (int argc, char *argv[])
     }
 
     vector<Surface *> surfaces;
-    Camera camera = parseSceneFile (argv[1], surfaces);
-    Imf::Array2D<Imf::Rgba> pixels;
-    pixels.resizeErase(camera.heightPixels, camera.widthPixels);
-
-    for (int y = 0; y < camera.heightPixels; y++) {
-        for (int x = 0; x < camera.widthPixels; x++) {
-            pixels[camera.heightPixels - y - 1][x] = calculatePixel(x, y, camera, surfaces);
-        }
-    }
-
-    writeRgba(argv[2], &pixels[0][0], camera.widthPixels, camera.heightPixels);
+    vector<Light *> lights;
+    Camera camera = parseSceneFile (argv[1], surfaces, lights);
+    camera.writeScene(argv[2], surfaces, lights);
 
     for (int i = 0; i < surfaces.size(); i++) {
         delete surfaces[i];
