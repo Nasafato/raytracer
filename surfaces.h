@@ -39,5 +39,17 @@ public:
     Plane(Vec3, double d, Material *);
 };
 
+class Triangle: public Surface {
+
+private:
+    Point p1_, p2_, p3_;
+    Vec3 normal_;
+
+public:
+    Intersection intersect(Ray);
+    Triangle(Point, Point, Point, Vec3, Material *);
+};
+
+
 
 #endif
