@@ -11,7 +11,7 @@
 class Surface {
 
 public:
-    Material material;
+    Material material_;
     virtual Intersection intersect(Ray) = 0;
 };
 
@@ -27,5 +27,17 @@ public:
 
     Sphere(Point, double, Material *);
 };
+
+class Plane: public Surface {
+
+private:
+    Vec3 normal_;
+    double d_;
+
+public:
+    Intersection intersect(Ray);
+    Plane(Vec3, double d, Material *);
+};
+
 
 #endif

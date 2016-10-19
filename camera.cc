@@ -101,7 +101,7 @@ Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vecto
 
     if (currentIntersection.intersected_) {
         double rgbaValues[] = {0.0, 0.0, 0.0};
-        calculateShading(rgbaValues, ray, currentIntersection, closestSurface->material, lights);
+        calculateShading(rgbaValues, ray, currentIntersection, closestSurface->material_, lights);
         rgba.r = rgbaValues[0];
         rgba.g = rgbaValues[1];
         rgba.b = rgbaValues[2];
