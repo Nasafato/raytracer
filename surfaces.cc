@@ -8,6 +8,7 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
     material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
 }
 
+
 Intersection Sphere::intersect(Ray ray) {
 
     Vec3 e_c = ray.origin - center;
@@ -23,6 +24,9 @@ Intersection Sphere::intersect(Ray ray) {
         double firstTerm = d.reverse().dot(e_c);
         double plusDiscriminant = (firstTerm + sqrt(discriminant)) / d_dot_d;
         double minusDiscriminant = (firstTerm - sqrt(discriminant)) / d_dot_d;
+        if (plusDiscriminant < 0.0 and minusDiscriminant < 0.0) {
+            return intersection;
+        }
         double minT = std::min(std::max(plusDiscriminant, (double)0.0), std::max(minusDiscriminant, (double)0.0));
         Point closestPoint = ray.origin + (ray.direction * minT);
 
@@ -44,6 +48,7 @@ Plane::Plane(Vec3 normal, double d, Material *nm) {
     d_ = d;
     material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
 }
+
 
 Intersection Plane::intersect(Ray ray) {
     Intersection intersection;
@@ -79,6 +84,24 @@ Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
 
 Intersection Triangle::intersect(Ray ray) {
     Intersection intersection;
+    Vec3 u = p2_ - p1_;
+    Vec3 v = p3_ - p2_;
+    Vec3 w = p1_ - p3_;
+
+
+
 
     return intersection;
+}
+
+void Plane::getType() {
+    std::cout << "plane";
+}
+
+void Sphere::getType() {
+    std::cout << "sphere";
+}
+
+void Triangle::getType() {
+    std::cout << "triangle";
 }

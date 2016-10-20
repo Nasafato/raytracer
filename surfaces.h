@@ -13,6 +13,7 @@ class Surface {
 public:
     Material material_;
     virtual Intersection intersect(Ray) = 0;
+    virtual void getType() = 0;
 };
 
 class Sphere: public Surface {
@@ -23,9 +24,8 @@ protected:
 
 public:
     Intersection intersect(Ray);
-    void print();
-
     Sphere(Point, double, Material *);
+    void getType();
 };
 
 class Plane: public Surface {
@@ -37,6 +37,7 @@ private:
 public:
     Intersection intersect(Ray);
     Plane(Vec3, double d, Material *);
+    void getType();
 };
 
 class Triangle: public Surface {
@@ -48,6 +49,7 @@ private:
 public:
     Intersection intersect(Ray);
     Triangle(Point, Point, Point, Vec3, Material *);
+    void getType();
 };
 
 
