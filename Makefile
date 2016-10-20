@@ -1,10 +1,10 @@
 all:
-	g++ -g -Wall -o scn2pov -I/usr/include/OpenEXR -I/usr/local/include/OpenEXR -lIlmImf -lImath -lHalf -L/usr/local/lib *.cc
+	g++ -g -Wall -o prog_out -I/usr/include/OpenEXR -I/usr/local/include/OpenEXR -lIlmImf -lImath -lHalf -L/usr/local/lib *.cc
 
 test:
-	./scn2pov scenes/scene_1.scn output4/scene_1-test.exr; \
-	./scn2pov scenes/scene_2.scn output4/scene_2-test.exr; \
-	./scn2pov scenes/scene_3.scn output4/scene_3-test.exr; \
-	./scn2pov scenes/scene_4.scn output4/scene_4-test.exr; \
-	./scn2pov scenes/scene_5.scn output4/scene_5-test.exr; \
-	./scn2pov scenes/scene_7.scn output4/scene_7-test.exr; 
+	./prog_out scenes/scene_1.scn output_test/scene_1-test.exr; \
+	./prog_out scenes/scene_2.scn output_test/scene_2-test.exr; \
+	./prog_out scenes/scene_3.scn output_test/scene_3-test.exr; \
+	./prog_out scenes/scene_4.scn output_test/scene_4-test.exr; \
+	./prog_out scenes/scene_5.scn output_test/scene_5-test.exr; \
+	./prog_out scenes/scene_7.scn output_test/scene_7-test.exr; 
