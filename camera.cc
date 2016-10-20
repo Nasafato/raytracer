@@ -1,4 +1,5 @@
 #include "camera.h"
+#include <cmath>
 #include <iostream>
 
 using namespace std;
@@ -81,8 +82,12 @@ void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection
         for (int s = 0; s < surfaces.size(); s++) {
             Intersection potentialIntersection = surfaces[s]->intersect(lightRay);
             if (potentialIntersection.intersected_) {
-                lightIntersection = potentialIntersection;
-                break;
+                Vec3 unNormalizedLightVector = (lights[i]->position_ - intersection.closestPoint_);
+                double distance = std::sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
+                if (potentialIntersection.t_ <= distance) {
+                    lightIntersection = potentialIntersection;
+                    break;
+                }
             }
         }
 

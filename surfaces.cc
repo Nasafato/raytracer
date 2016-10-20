@@ -84,12 +84,43 @@ Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
 
 Intersection Triangle::intersect(Ray ray) {
     Intersection intersection;
-    Vec3 u = p2_ - p1_;
-    Vec3 v = p3_ - p2_;
-    Vec3 w = p1_ - p3_;
+    double a = p1_.x - p2_.x;
+    double b = p1_.y - p2_.y;
+    double c = p1_.z - p2_.z;
 
+    double d = p1_.x - p3_.x;
+    double e = p1_.y - p3_.y;
+    double f = p1_.z - p3_.z;
 
+    double j = p1_.x - ray.origin.x;
+    double k = p1_.y - ray.origin.y;
+    double l = p1_.z - ray.origin.z;
 
+    double g = ray.direction.x;
+    double h = ray.direction.y;
+    double i = ray.direction.z;
+
+    double M = a * (e * i - h * f) + b * (g * f - d * i) + c * (d * h - e * g);
+    double t = -(f * (a * k - j * b) + e * (j * c - a * l) + d * (b * l - k * c)) / M;
+
+    if (t < 0.0) {
+        return intersection;
+    }
+
+    double gamma = (i * (a * k - j * b) + h * (j * c - a * l) + g * (b * l - k * c)) / M;
+    if ((gamma < 0.0) || (gamma > 1.0)) {
+        return intersection;
+    }
+
+    double beta = (j * (e * i - h * f) + k * (g * f - d * i) + l * (d * h - e * g)) / M;
+    if ((beta < 0.0) || (beta > 1.0 - gamma)) {
+        return intersection;
+    }
+
+    intersection.t_ = t;
+    intersection.intersected_ = true;
+    intersection.closestPoint_ = ray.origin + ray.direction * t;
+    intersection.surfaceNormal_ = normal_;
 
     return intersection;
 }

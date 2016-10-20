@@ -111,12 +111,12 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 Point p3 = Point(x3, y3, z3);
 
                 Vec3 u = p1 - p2;
-                Vec3 v = p3 - p1;
+                Vec3 v = p1 - p3;
                 Vec3 normal = u.cross(v);
                 normal.normalize();
 
                 Triangle *triangle = new Triangle(p1, p2, p3, normal, currentMaterial);
-                // surfaces.push_back(triangle);
+                surfaces.push_back(triangle);
                 break;
 
             }
