@@ -65,34 +65,32 @@ Ray Camera::getRayForPixel(int x, int y) {
 }
 
 void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection, Material material, vector<Light *> lights, vector<Surface *> surfaces) {
-    PointLight *light = (PointLight *)lights[0];
+    for (int i = 0; i < lights.size(); i++) {
+        Vec3 lightVector = (lights[i]->position_ - intersection.closestPoint_).normalize();
+        Vec3 normal = intersection.surfaceNormal_;
+        Vec3 v = ray.direction.reverse().normalize();
+        Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
 
-    Vec3 lightVector = (light->position - intersection.closestPoint_).normalize();
-    Vec3 normal = intersection.surfaceNormal_;
-    Vec3 v = ray.direction.reverse().normalize();
-    Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
+        double phong = material.r;
+        double zero = 0.0;
+        double attenuationFactor = 1.0 / pow((lights[i]->position_ - intersection.closestPoint_).magnitude(), 2.0);
 
-    double phong = material.r;
-    double zero = 0.0;
-    double attenuationFactor = 1.0 / pow((light->position - intersection.closestPoint_).magnitude(), 2.0);
+        Intersection lightIntersection;
+        Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.05, lightVector);
 
-    Intersection lightIntersection;
-    Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.05, lightVector);
-    // std::cout << "Looking at new intersection" << std::endl;
-    for (int i = 0; i < surfaces.size(); i++) {
-        Intersection potentialIntersection = surfaces[i]->intersect(lightRay);
-        // surfaces[i]->getType();
-        // std::cout << "Intersection result is " << potentialIntersection.intersected_ << std::endl;
-        if (potentialIntersection.intersected_) {
-            lightIntersection = potentialIntersection;
-            break;
+        for (int s = 0; s < surfaces.size(); s++) {
+            Intersection potentialIntersection = surfaces[s]->intersect(lightRay);
+            if (potentialIntersection.intersected_) {
+                lightIntersection = potentialIntersection;
+                break;
+            }
         }
-    }
 
-    if (lightIntersection.intersected_ == false) {
-        rgba[0] = (material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong)) * light->r * attenuationFactor;
-        rgba[1] = (material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong)) * light->g * attenuationFactor;
-        rgba[2] = (material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong)) * light->b * attenuationFactor;
+        if (lightIntersection.intersected_ == false) {
+            rgba[0] += (material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong)) * lights[i]->r * attenuationFactor;
+            rgba[1] += (material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong)) * lights[i]->g * attenuationFactor;
+            rgba[2] += (material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong)) * lights[i]->b * attenuationFactor;
+        }
     }
 }
 
