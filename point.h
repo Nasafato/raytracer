@@ -4,10 +4,9 @@
 #include "vec3.h"
 
 class Point {
-protected:
-    double x, y, z;
 
 public:
+    double x, y, z;
     Point();
     Point(double, double, double);
     void setX(double);

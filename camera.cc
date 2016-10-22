@@ -1,5 +1,7 @@
 #include "camera.h"
+#include <cmath>
 #include <iostream>
+#include <limits>
 
 using namespace std;
 
@@ -64,23 +66,38 @@ Ray Camera::getRayForPixel(int x, int y) {
     return Ray(eye, dir);
 }
 
-void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection, Material material, vector<Light *> lights) {
-    PointLight *light = (PointLight *)lights[0];
-    Vec3 lightVector = (light->position - intersection.closestPoint_).normalize();
-    Vec3 normal = intersection.surfaceNormal_;
-    // Vec3 v = (eye - intersection.closestPoint_).normalize();
-    Vec3 v = ray.direction.reverse().normalize();
-    Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
-    double phong = material.r;
-    // std::cout << "light " << lightVector << ", normal " << normal << std::endl;
-    double zero = 0.0;
-    double attenuationFactor = 1.0 / pow((light->position - intersection.closestPoint_).magnitude(), 2.0);
+void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection, Material material, vector<Light *> lights, vector<Surface *> surfaces) {
+    for (int i = 0; i < lights.size(); i++) {
+        Vec3 lightVector = (lights[i]->position_ - intersection.closestPoint_).normalize();
+        Vec3 normal = intersection.surfaceNormal_;
+        Vec3 v = ray.direction.reverse().normalize();
+        Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
 
-    rgba[0] = (material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong)) * light->r * attenuationFactor;
-    rgba[1] = (material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong)) * light->g * attenuationFactor;
-    rgba[2] = (material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong)) * light->b * attenuationFactor;
-    // std::cout << material << std::endl;
-    // std::cout << ", red lamb is " << rgba[0];
+        double phong = material.r;
+        double zero = 0.0;
+        double attenuationFactor = 1.0 / pow((lights[i]->position_ - intersection.closestPoint_).magnitude(), 2.0);
+
+        Intersection lightIntersection;
+        Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.05, lightVector);
+
+        for (int s = 0; s < surfaces.size(); s++) {
+            Intersection potentialIntersection = surfaces[s]->intersect(lightRay);
+            if (potentialIntersection.intersected_) {
+                Vec3 unNormalizedLightVector = (lights[i]->position_ - intersection.closestPoint_);
+                double distance = std::sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
+                if (potentialIntersection.t_ <= distance) {
+                    lightIntersection = potentialIntersection;
+                    break;
+                }
+            }
+        }
+
+        if (lightIntersection.intersected_ == false) {
+            rgba[0] += (material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong)) * lights[i]->r * attenuationFactor;
+            rgba[1] += (material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong)) * lights[i]->g * attenuationFactor;
+            rgba[2] += (material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong)) * lights[i]->b * attenuationFactor;
+        }
+    }
 }
 
 Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vector<Light *> lights) {
@@ -101,7 +118,8 @@ Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vecto
 
     if (currentIntersection.intersected_) {
         double rgbaValues[] = {0.0, 0.0, 0.0};
-        calculateShading(rgbaValues, ray, currentIntersection, closestSurface->material, lights);
+        // closestSurface->getType();
+        calculateShading(rgbaValues, ray, currentIntersection, closestSurface->material_, lights, surfaces);
         rgba.r = rgbaValues[0];
         rgba.g = rgbaValues[1];
         rgba.b = rgbaValues[2];

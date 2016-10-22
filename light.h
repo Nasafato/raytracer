@@ -7,11 +7,11 @@ class Light {
 
 public:
     double r, g, b;
+    Point position_;
 };
 
 class PointLight: public Light {
 public:
-    Point position;
     PointLight();
     PointLight(Point, double, double, double);
 };
