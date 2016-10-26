@@ -7,4 +7,5 @@ test:
 	./prog_out scenes/scene_3.scn output_test/scene_3-test.exr; \
 	./prog_out scenes/scene_4.scn output_test/scene_4-test.exr; \
 	./prog_out scenes/scene_5.scn output_test/scene_5-test.exr; \
-	./prog_out scenes/scene_7.scn output_test/scene_7-test.exr; 
+	./prog_out scenes/scene_7.scn output_test/scene_7-test.exr; \
+	./prog_out scenes/scene_8.scn output_test/scene_8-test.exr;

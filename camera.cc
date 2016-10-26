@@ -67,6 +67,7 @@ Ray Camera::getRayForPixel(int x, int y) {
 }
 
 void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection, Material material, vector<Light *> lights, vector<Surface *> surfaces) {
+
     for (int i = 0; i < lights.size(); i++) {
         Vec3 lightVector = (lights[i]->position_ - intersection.closestPoint_).normalize();
         Vec3 normal = intersection.surfaceNormal_;
@@ -76,6 +77,14 @@ void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection
         double phong = material.r;
         double zero = 0.0;
         double attenuationFactor = 1.0 / pow((lights[i]->position_ - intersection.closestPoint_).magnitude(), 2.0);
+        double dr, dg, db;
+        double sr, sg, sb;
+        dr = material.dr;
+        dg = material.dg;
+        db = material.db;
+        sr = material.sr;
+        sg = material.sg;
+        sb = material.sb;
 
         Intersection lightIntersection;
         Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.05, lightVector);
@@ -92,10 +101,21 @@ void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection
             }
         }
 
+        double normalDotLight = normal.dot(lightVector);
+        if (normal.dot(lightVector) < 0.0) {
+            dr = 1.0;
+            dg = 1.0;
+            db = 0.0;
+            sr = 0.0;
+            sg = 0.0;
+            sb = 0.0;
+            normalDotLight *= -1.0;
+        }
+
         if (lightIntersection.intersected_ == false) {
-            rgba[0] += (material.dr * max(normal.dot(lightVector), zero) + material.sr * pow(max(zero, normal.dot(h)), phong)) * lights[i]->r * attenuationFactor;
-            rgba[1] += (material.dg * max(normal.dot(lightVector), zero) + material.sg * pow(max(zero, normal.dot(h)), phong)) * lights[i]->g * attenuationFactor;
-            rgba[2] += (material.db * max(normal.dot(lightVector), zero) + material.sb * pow(max(zero, normal.dot(h)), phong)) * lights[i]->b * attenuationFactor;
+            rgba[0] += (dr * max(normalDotLight, zero) + sr * pow(max(zero, normal.dot(h)), phong)) * lights[i]->r * attenuationFactor;
+            rgba[1] += (dg * max(normalDotLight, zero) + sg * pow(max(zero, normal.dot(h)), phong)) * lights[i]->g * attenuationFactor;
+            rgba[2] += (db * max(normalDotLight, zero) + sb * pow(max(zero, normal.dot(h)), phong)) * lights[i]->b * attenuationFactor;
         }
     }
 }
@@ -118,7 +138,6 @@ Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vecto
 
     if (currentIntersection.intersected_) {
         double rgbaValues[] = {0.0, 0.0, 0.0};
-        // closestSurface->getType();
         calculateShading(rgbaValues, ray, currentIntersection, closestSurface->material_, lights, surfaces);
         rgba.r = rgbaValues[0];
         rgba.g = rgbaValues[1];
