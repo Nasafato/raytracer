@@ -57,6 +57,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
 {
     Camera camera;
     Material* currentMaterial = new Material();
+    AmbientLight ambientLight;
 
     ifstream inFile(filename);    // open the file
     string line;
@@ -190,8 +191,17 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                     }
                     case 'd':   // directional light
                         break;
-                    case 'a':   // ambient light
+
+                    case 'a': {   // ambient light
+                        double r, g, b;
+                        r = getTokenAsdouble(line, 2);
+                        g = getTokenAsdouble(line, 3);
+                        b = getTokenAsdouble(line, 4);
+
+                        ambientLight = AmbientLight(r, g, b);
+
                         break;
+                    }
                 }
                 break;
 
@@ -235,6 +245,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
 
     delete currentMaterial;
     currentMaterial = NULL;
+    camera.ambientLight_ = ambientLight;
     return camera;
 }
 

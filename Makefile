@@ -8,4 +8,10 @@ test:
 	./prog_out scenes/scene_4.scn output_test/scene_4-test.exr; \
 	./prog_out scenes/scene_5.scn output_test/scene_5-test.exr; \
 	./prog_out scenes/scene_7.scn output_test/scene_7-test.exr; \
-	./prog_out scenes/scene_8.scn output_test/scene_8-test.exr;
+	./prog_out scenes/scene_8.scn output_test/scene_8-test.exr; \
+
+flipped:
+	./prog_out scenes/scene_10.scn output_test/scene_10-test.exr;
+
+teapot:
+	./prog_out scenes/scene_9.scn output_test/scene_9-test.exr;

@@ -4,6 +4,7 @@
 #include <limits>
 
 using namespace std;
+using namespace Imf;
 
 Camera::Camera() {
     eye = Point();
@@ -11,6 +12,7 @@ Camera::Camera() {
     u = Vec3();
     v = Vec3();
     w = Vec3();
+    ambientLight_ = AmbientLight();
 
     focalLength = 0.0;
 
@@ -31,6 +33,7 @@ Camera::Camera(Point pos, Vec3 dir, double d, double iw, double ih, int wp, int 
     w = dir.reverse();
     w.normalize();
     direction = dir;
+    ambientLight_ = AmbientLight();
 
     if (1.0 - fabs(w.y) < 0.0001) {
         u = Vec3(1.0, 0.0, 0.0);
@@ -66,7 +69,7 @@ Ray Camera::getRayForPixel(int x, int y) {
     return Ray(eye, dir);
 }
 
-void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection, Material material, vector<Light *> lights, vector<Surface *> surfaces) {
+void Camera::calculateShading(Rgba &rgba, Ray &ray, Intersection &intersection, Material &material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT) {
 
     for (int i = 0; i < lights.size(); i++) {
         Vec3 lightVector = (lights[i]->position_ - intersection.closestPoint_).normalize();
@@ -89,8 +92,9 @@ void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection
         Intersection lightIntersection;
         Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.05, lightVector);
 
+        // See if the shadow ray intersects an object
         for (int s = 0; s < surfaces.size(); s++) {
-            Intersection potentialIntersection = surfaces[s]->intersect(lightRay);
+            Intersection potentialIntersection = surfaces[s]->intersect(lightRay, minT, maxT);
             if (potentialIntersection.intersected_) {
                 Vec3 unNormalizedLightVector = (lights[i]->position_ - intersection.closestPoint_);
                 double distance = std::sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
@@ -102,7 +106,7 @@ void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection
         }
 
         double normalDotLight = normal.dot(lightVector);
-        if (normal.dot(lightVector) < 0.0) {
+        if (normalDotLight < 0.0) {
             dr = 1.0;
             dg = 1.0;
             db = 0.0;
@@ -113,36 +117,56 @@ void Camera::calculateShading(double rgba[3], Ray ray, Intersection intersection
         }
 
         if (lightIntersection.intersected_ == false) {
-            rgba[0] += (dr * max(normalDotLight, zero) + sr * pow(max(zero, normal.dot(h)), phong)) * lights[i]->r * attenuationFactor;
-            rgba[1] += (dg * max(normalDotLight, zero) + sg * pow(max(zero, normal.dot(h)), phong)) * lights[i]->g * attenuationFactor;
-            rgba[2] += (db * max(normalDotLight, zero) + sb * pow(max(zero, normal.dot(h)), phong)) * lights[i]->b * attenuationFactor;
+            rgba.r += (dr * max(normalDotLight, zero) + sr * pow(max(zero, normal.dot(h)), phong)) * lights[i]->r * attenuationFactor;
+            rgba.g += (dg * max(normalDotLight, zero) + sg * pow(max(zero, normal.dot(h)), phong)) * lights[i]->g * attenuationFactor;
+            rgba.b += (db * max(normalDotLight, zero) + sb * pow(max(zero, normal.dot(h)), phong)) * lights[i]->b * attenuationFactor;
         }
     }
 }
 
-Imf::Rgba Camera::calculatePixel(int x, int y, vector<Surface *> surfaces, vector<Light *> lights) {
-    Ray ray = getRayForPixel(x, y);
-    Imf::Rgba rgba = Imf::Rgba(0.0, 0.0, 0.0, 1.0);
-    double minT = std::numeric_limits<double>::max();
+Imf::Rgba Camera::calculatePixel(Ray &ray, vector<Surface *> &surfaces, vector<Light *> &lights, double minT, double maxT, int recurseLimit) {
+    Rgba rgba = Rgba(0.0, 0.0, 0.0, 1.0);
+
+    if (recurseLimit == 0) {
+        return rgba;
+    }
+
     Intersection currentIntersection;
     Surface* closestSurface = NULL;
+    double currentMinT = maxT;
 
     for (int i = 0; i < surfaces.size(); i++) {
-        Intersection intersection = surfaces[i]->intersect(ray);
-        if (intersection.intersected_ && intersection.t_ < minT) {
-            minT = intersection.t_;
+        Intersection intersection = surfaces[i]->intersect(ray, minT, maxT);
+        if (intersection.intersected_ && intersection.t_ < currentMinT) {
+            currentMinT = intersection.t_;
             closestSurface = surfaces[i];
             currentIntersection = intersection;
         }
     }
 
-    if (currentIntersection.intersected_) {
-        double rgbaValues[] = {0.0, 0.0, 0.0};
-        calculateShading(rgbaValues, ray, currentIntersection, closestSurface->material_, lights, surfaces);
-        rgba.r = rgbaValues[0];
-        rgba.g = rgbaValues[1];
-        rgba.b = rgbaValues[2];
+    if (!currentIntersection.intersected_) {
+        return rgba;
     }
+    double ar, ag, ab;
+    ar = ambientLight_.r_;
+    ag = ambientLight_.g_;
+    ab = ambientLight_.b_;
+
+    rgba.r += ar * closestSurface->material_.dr;
+    rgba.g += ag * closestSurface->material_.dg;
+    rgba.b += ab * closestSurface->material_.db;
+
+    calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT);
+    if (closestSurface->material_.ir == 0.0 && closestSurface->material_.ig == 0.0 && closestSurface->material_.ib == 0.0) {
+        return rgba;
+    }
+
+    Vec3 refRayDir = ray.direction - (currentIntersection.surfaceNormal_ * (ray.direction.dot(currentIntersection.surfaceNormal_)) * 2);
+    Ray reflectedRay = Ray(currentIntersection.closestPoint_ + refRayDir * 0.05, refRayDir);
+    Rgba refRgba = calculatePixel(reflectedRay, surfaces, lights, minT, maxT, recurseLimit - 1);
+    rgba.r += closestSurface->material_.ir * refRgba.r;
+    rgba.g += closestSurface->material_.ig * refRgba.g;
+    rgba.b += closestSurface->material_.ib * refRgba.b;
 
     return rgba;
 }
@@ -153,13 +177,17 @@ void Camera::writeRgba (const char fileName[], const Imf::Rgba *pixels, int widt
     file.writePixels (height);
 }
 
-void Camera::writeScene(const char filename[], vector<Surface *> surfaces, vector<Light *> lights) {
+void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vector<Light *> &lights) {
     Imf::Array2D<Imf::Rgba> pixels;
     pixels.resizeErase(heightPixels, widthPixels);
 
     for (int y = 0; y < heightPixels; y++) {
         for (int x = 0; x < widthPixels; x++) {
-            pixels[y][x] = calculatePixel(x, y, surfaces, lights);
+            Ray ray = getRayForPixel(x, y);
+            int recurseLimit = 20;
+            double minT = 0.001;
+            double maxT = std::numeric_limits<double>::max();;
+            pixels[y][x] = calculatePixel(ray, surfaces, lights, minT, maxT, recurseLimit);
         }
     }
     writeRgba(filename, &pixels[0][0], widthPixels, heightPixels);

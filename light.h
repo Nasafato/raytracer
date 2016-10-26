@@ -16,4 +16,13 @@ public:
     PointLight(Point, double, double, double);
 };
 
+class AmbientLight {
+public:
+    double r_, g_, b_;
+    AmbientLight();
+    AmbientLight(double, double, double);
+};
+
+
+
 #endif
