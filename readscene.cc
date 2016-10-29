@@ -392,5 +392,10 @@ int main (int argc, char *argv[])
         surfaces[i] = NULL;
     }
 
+    for (int i = 0; i < lights.size(); i++) {
+        delete lights[i];
+        lights[i] = NULL;
+    }
+
     return 0;
 }
