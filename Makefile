@@ -10,6 +10,17 @@ test:
 	./prog_out scenes/scene_7.scn output_test/scene_7-test.exr; \
 	./prog_out scenes/scene_8.scn output_test/scene_8-test.exr; \
 
+submit:
+	./prog_out scenes/scene_1.scn output_submission/scene_1-submission.exr; \
+	./prog_out scenes/scene_2.scn output_submission/scene_2-submission.exr; \
+	./prog_out scenes/scene_3.scn output_submission/scene_3-submission.exr; \
+	./prog_out scenes/scene_4.scn output_submission/scene_4-submission.exr; \
+	./prog_out scenes/scene_5.scn output_submission/scene_5-submission.exr; \
+	./prog_out scenes/scene_7.scn output_submission/scene_7-submission.exr; \
+	./prog_out scenes/scene_8.scn output_submission/scene_8-submission.exr; \
+	./prog_out scenes/scene_9.scn output_submission/scene_9-submission.exr; \
+	./prog_out scenes/scene_10.scn output_submission/scene_10-submission.exr;
+
 flipped:
 	./prog_out scenes/scene_10.scn output_test/scene_10-test.exr;
 
