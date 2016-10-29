@@ -15,3 +15,6 @@ flipped:
 
 teapot:
 	./prog_out scenes/scene_9.scn output_test/scene_9-test.exr;
+
+bunny:
+	./prog_out scenes/bunny.scn output_test/bunny.exr;
