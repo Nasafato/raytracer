@@ -12,7 +12,7 @@ class Surface {
 
 public:
     Material material_;
-    virtual Intersection intersect(Ray) = 0;
+    virtual Intersection intersect(Ray, double, double) = 0;
     virtual void getType() = 0;
 };
 
@@ -23,7 +23,7 @@ protected:
     double radius;
 
 public:
-    Intersection intersect(Ray);
+    Intersection intersect(Ray, double, double);
     Sphere(Point, double, Material *);
     void getType();
 };
@@ -35,7 +35,7 @@ private:
     double d_;
 
 public:
-    Intersection intersect(Ray);
+    Intersection intersect(Ray, double, double);
     Plane(Vec3, double d, Material *);
     void getType();
 };
@@ -47,7 +47,7 @@ private:
     Vec3 normal_;
 
 public:
-    Intersection intersect(Ray);
+    Intersection intersect(Ray, double, double);
     Triangle(Point, Point, Point, Vec3, Material *);
     void getType();
 };

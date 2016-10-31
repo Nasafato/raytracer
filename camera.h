@@ -21,6 +21,7 @@ public:
     Vec3 u;
     Vec3 v;
     Vec3 w;
+    AmbientLight ambientLight_;
 
     double l, r, t, b;
 
@@ -33,12 +34,12 @@ public:
 
     Camera();
     Camera(Point, Vec3, double, double, double, int, int);
-    void writeScene(const char[], std::vector<Surface *>, std::vector<Light *>);
+    void writeScene(const char[], std::vector<Surface *>&, std::vector<Light *>&);
 
 private:
     Ray getRayForPixel(int, int);
-    Imf::Rgba calculatePixel(int, int, std::vector<Surface *>, std::vector<Light *>);
-    void calculateShading(double[3], Ray, Intersection, Material, std::vector<Light *>, std::vector<Surface *>);
+    Imf::Rgba calculatePixel(Ray&, std::vector<Surface *>&, std::vector<Light *>&, double, double, int);
+    void calculateShading(Imf::Rgba&, Ray&, Intersection&, Material&, std::vector<Light *>&, std::vector<Surface *>&, double, double);
     void writeRgba(const char[], const Imf::Rgba *, int, int);
 
 };

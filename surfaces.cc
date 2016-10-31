@@ -9,7 +9,7 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
 }
 
 
-Intersection Sphere::intersect(Ray ray) {
+Intersection Sphere::intersect(Ray ray, double minT, double maxT) {
 
     Vec3 e_c = ray.origin - center;
     Vec3 d = ray.direction;
@@ -50,7 +50,7 @@ Plane::Plane(Vec3 normal, double d, Material *nm) {
 }
 
 
-Intersection Plane::intersect(Ray ray) {
+Intersection Plane::intersect(Ray ray, double minT, double maxT) {
     Intersection intersection;
 
     double numerator = -(ray.origin.toVec3().dot(normal_) - d_);
@@ -82,7 +82,7 @@ Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
     material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
 }
 
-Intersection Triangle::intersect(Ray ray) {
+Intersection Triangle::intersect(Ray ray, double minT, double maxT) {
     Intersection intersection;
     double a = p1_.x - p2_.x;
     double b = p1_.y - p2_.y;

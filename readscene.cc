@@ -1,4 +1,5 @@
 #include <cmath>
+#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -13,7 +14,73 @@
 
 using namespace std;
 
-#define IM_DEBUGGING
+// #define IM_DEBUGGING
+void read_wavefront_file (
+    const char *file,
+    std::vector< int > &tris,
+    std::vector< float > &verts)
+{
+
+    // clear out the tris and verts vectors:
+    tris.clear ();
+    verts.clear ();
+
+    ifstream in(file);
+    char buffer[1025];
+    string cmd;
+
+
+    for (int line=1; in.good(); line++) {
+        in.getline(buffer,1024);
+        buffer[in.gcount()]=0;
+
+        cmd="";
+
+        istringstream iss (buffer);
+
+        iss >> cmd;
+
+        if (cmd[0]=='#' or cmd.empty()) {
+            // ignore comments or blank lines
+            continue;
+        }
+        else if (cmd=="v") {
+            // got a vertex:
+
+            // read in the parameters:
+            double pa, pb, pc;
+            iss >> pa >> pb >> pc;
+
+            verts.push_back (pa);
+            verts.push_back (pb);
+            verts.push_back (pc);
+         }
+        else if (cmd=="f") {
+            // got a face (triangle)
+
+            // read in the parameters:
+            int i, j, k;
+            iss >> i >> j >> k;
+
+            // vertex numbers in OBJ files start with 1, but in C++ array
+            // indices start with 0, so we're shifting everything down by
+            // 1
+            tris.push_back (i-1);
+            tris.push_back (j-1);
+            tris.push_back (k-1);
+        }
+        else {
+            std::cerr << "Parser error: invalid command at line " << line << std::endl;
+        }
+
+     }
+
+    in.close();
+
+    std::cout << "found this many tris, verts: " << tris.size () / 3.0 << "  " << verts.size () / 3.0 << std::endl;
+}
+
+
 
 double getTokenAsdouble (string inString, int whichToken)
 {
@@ -51,12 +118,21 @@ double getTokenAsdouble (string inString, int whichToken)
     return thisdoubleVal;
 }
 
+string getTokenAsString (string inString)
+{
+    int pos = inString.find_first_of(' ');
+    string fileName = inString.substr(pos+1);
+    return fileName;
+}
+
+
 
 // read the scene file.
 Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::vector<Light *>& lights)
 {
     Camera camera;
     Material* currentMaterial = new Material();
+    AmbientLight ambientLight;
 
     ifstream inFile(filename);    // open the file
     string line;
@@ -190,8 +266,17 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                     }
                     case 'd':   // directional light
                         break;
-                    case 'a':   // ambient light
+
+                    case 'a': {   // ambient light
+                        double r, g, b;
+                        r = getTokenAsdouble(line, 2);
+                        g = getTokenAsdouble(line, 3);
+                        b = getTokenAsdouble(line, 4);
+
+                        ambientLight = AmbientLight(r, g, b);
+
                         break;
+                    }
                 }
                 break;
 
@@ -222,6 +307,55 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 break;
             }
 
+            case 'w': {
+                // read wavefront file
+
+                string fileName = getTokenAsString(line);
+                std::cout << fileName << std::endl;
+                vector<int> tris;
+                vector <float> verts;
+
+                read_wavefront_file (fileName.c_str(), tris, verts);
+
+                cout << tris.size() << ", " << verts.size() << endl;
+
+                double x1, y1, z1;
+                double x2, y2, z2;
+                double x3, y3, z3;
+
+                int size = tris.size() / 3;
+                std::cout << "Number of triangles being parsed is: " << size << endl;
+                for (int i = 0; i < size; i++) {
+                    x1 = verts[3*tris[3*i]];
+                    y1 = verts[3*tris[3*i]+1];
+                    z1 = verts[3*tris[3*i]+2];
+
+                    x2 = verts[3*tris[3*i+1]];
+                    y2 = verts[3*tris[3*i+1]+1];
+                    z2 = verts[3*tris[3*i+1]+2];
+
+                    x3 = verts[3*tris[3*i+2]];
+                    y3 = verts[3*tris[3*i+2]+1];
+                    z3 = verts[3*tris[3*i+2]+2];
+
+                    Point p1 = Point(x1, y1, z1);
+                    Point p2 = Point(x2, y2, z2);
+                    Point p3 = Point(x3, y3, z3);
+
+                    Vec3 u = p1 - p2;
+                    Vec3 v = p1 - p3;
+                    Vec3 normal = u.cross(v);
+                    normal.normalize();
+
+                    Triangle *triangle = new Triangle(p1, p2, p3, normal, currentMaterial);
+                    surfaces.push_back(triangle);
+                }
+
+                cout << "Size of surfaces now is " << surfaces.size() << endl;
+
+                break;
+            }
+
             case '/':
                 // don't do anything, it's a comment
                 break;
@@ -235,6 +369,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
 
     delete currentMaterial;
     currentMaterial = NULL;
+    camera.ambientLight_ = ambientLight;
     return camera;
 }
 
@@ -249,12 +384,18 @@ int main (int argc, char *argv[])
 
     vector<Surface *> surfaces;
     vector<Light *> lights;
+
     Camera camera = parseSceneFile (argv[1], surfaces, lights);
     camera.writeScene(argv[2], surfaces, lights);
 
     for (int i = 0; i < surfaces.size(); i++) {
         delete surfaces[i];
         surfaces[i] = NULL;
+    }
+
+    for (int i = 0; i < lights.size(); i++) {
+        delete lights[i];
+        lights[i] = NULL;
     }
 
     return 0;
