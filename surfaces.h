@@ -8,10 +8,22 @@
 #include "light.h"
 #include "intersection.h"
 
+
+class BoundingBox {
+
+public:
+    Point minPoint_;
+    Point maxPoint_;
+    BoundingBox();
+    BoundingBox(Point, Point);
+    bool intersect(Ray, double, double);
+};
+
 class Surface {
 
 public:
     Material material_;
+    BoundingBox boundingBox_;
     virtual Intersection intersect(Ray, double, double) = 0;
     virtual void getType() = 0;
 };

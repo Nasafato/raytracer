@@ -2,6 +2,60 @@
 #include <cmath>
 #include "surfaces.h"
 
+BoundingBox::BoundingBox() {
+    minPoint_ = Point();
+    maxPoint_ = Point();
+}
+
+BoundingBox::BoundingBox(Point minPoint, Point maxPoint) {
+    minPoint_ = minPoint;
+    maxPoint_ = maxPoint;
+}
+
+bool BoundingBox::intersect(Ray ray, double minT, double maxT) {
+    Vec3 d = ray.direction;
+
+    double t_xmin;
+    double t_xmax;
+    double t_ymin;
+    double t_ymax;
+    double t_zmin;
+    double t_zmax;
+
+    double a_x = 1 / d.x;
+    if (a_x >= 0) {
+        t_xmin = a_x * (minPoint_.x - ray.origin.x);
+        t_xmax = a_x * (maxPoint_.x - ray.origin.x);
+    } else {
+        t_xmax = a_x * (minPoint_.x - ray.origin.x);
+        t_xmin = a_x * (maxPoint_.x - ray.origin.x);
+    }
+
+    double a_y = 1 / d.y;
+    if (a_y >= 0) {
+        t_ymin = a_y * (minPoint_.y - ray.origin.y);
+        t_ymax = a_y * (maxPoint_.y - ray.origin.y);
+    } else {
+        t_ymax = a_y * (minPoint_.y - ray.origin.y);
+        t_ymin = a_y * (maxPoint_.y - ray.origin.y);
+    }
+
+    double a_z = 1 / d.z;
+    if (a_z >= 0) {
+        t_zmin = a_z * (minPoint_.z - ray.origin.z);
+        t_zmax = a_z * (maxPoint_.z - ray.origin.z);
+    } else {
+        t_zmax = a_z * (minPoint_.z - ray.origin.z);
+        t_zmin = a_z * (maxPoint_.z - ray.origin.z);
+    }
+
+    if ((t_xmin > t_ymax) || (t_xmin > t_zmax) || (t_ymin > t_xmax) || (t_ymin > t_zmax) || (t_zmin > t_xmax) || (t_zmin > t_ymax)) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
     center = ncenter;
     radius = nradius;
