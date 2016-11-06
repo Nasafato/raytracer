@@ -2,6 +2,8 @@
 #include <cmath>
 #include "surfaces.h"
 
+using namespace std;
+
 BoundingBox::BoundingBox() {
     minPoint_ = Point();
     maxPoint_ = Point();
@@ -59,11 +61,25 @@ bool BoundingBox::intersect(Ray ray, double minT, double maxT) {
 Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
     center = ncenter;
     radius = nradius;
+
+    Vec3 minVec = Vec3(-nradius, -nradius, -nradius);
+    Vec3 maxVec = Vec3(nradius, nradius, nradius);
+
+    Point minPoint = ncenter + minVec;
+    Point maxPoint = ncenter + maxVec;
+
+    boundingBox_ = BoundingBox(minPoint, maxPoint);
     material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
 }
 
 
 Intersection Sphere::intersect(Ray ray, double minT, double maxT) {
+
+    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
+
+    if (!boundingBox_.intersect(ray, minT, maxT)) {
+        return intersection;
+    }
 
     Vec3 e_c = ray.origin - center;
     Vec3 d = ray.direction;
@@ -72,7 +88,6 @@ Intersection Sphere::intersect(Ray ray, double minT, double maxT) {
     double discriminantTermTwo = (e_c.dot(e_c) - (radius * radius)) * d_dot_d;
     double discriminant = discriminantTermOne - discriminantTermTwo;
 
-    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
 
     if (discriminant >= 0.0) {
         double firstTerm = d.reverse().dot(e_c);
@@ -129,15 +144,34 @@ Intersection Plane::intersect(Ray ray, double minT, double maxT) {
 }
 
 Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
+    Point minPoint = Point(p1.x, p1.y, p1.z);
+    Point maxPoint = Point(p1.x, p1.y, p1.z);
+
     p1_ = p1;
     p2_ = p2;
     p3_ = p3;
+
+    minPoint.x = min(min(p1.x, p2.x), p3.x);
+    minPoint.y = min(min(p1.y, p2.y), p3.y);
+    minPoint.z = min(min(p1.z, p2.z), p3.z);
+
+    maxPoint.x = max(max(p1.x, p2.x), p3.x);
+    maxPoint.y = max(max(p1.y, p2.y), p3.y);
+    maxPoint.z = max(max(p1.z, p2.z), p3.z);
+
+    boundingBox_ = BoundingBox(minPoint, maxPoint);
+
     normal_ = normal;
     material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
 }
 
 Intersection Triangle::intersect(Ray ray, double minT, double maxT) {
     Intersection intersection;
+
+    if (!boundingBox_.intersect(ray, minT, maxT)) {
+        return intersection;
+    }
+
     double a = p1_.x - p2_.x;
     double b = p1_.y - p2_.y;
     double c = p1_.z - p2_.z;
