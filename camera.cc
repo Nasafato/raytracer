@@ -69,7 +69,7 @@ Ray Camera::getRayForPixel(int x, int y) {
     return Ray(eye, dir);
 }
 
-void Camera::calculateShading(Rgba &rgba, Ray &ray, Intersection &intersection, Material &material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT) {
+void Camera::calculateShading(Rgba &rgba, Ray &ray, Intersection &intersection, Material* material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT) {
 
     for (int i = 0; i < lights.size(); i++) {
         Vec3 lightVector = (lights[i]->position_ - intersection.closestPoint_).normalize();
@@ -77,17 +77,17 @@ void Camera::calculateShading(Rgba &rgba, Ray &ray, Intersection &intersection, 
         Vec3 v = ray.direction.reverse().normalize();
         Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
 
-        double phong = material.r;
+        double phong = material->r;
         double zero = 0.0;
         double attenuationFactor = 1.0 / pow((lights[i]->position_ - intersection.closestPoint_).magnitude(), 2.0);
         double dr, dg, db;
         double sr, sg, sb;
-        dr = material.dr;
-        dg = material.dg;
-        db = material.db;
-        sr = material.sr;
-        sg = material.sg;
-        sb = material.sb;
+        dr = material->dr;
+        dg = material->dg;
+        db = material->db;
+        sr = material->sr;
+        sg = material->sg;
+        sb = material->sb;
 
         Intersection lightIntersection;
         Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.05, lightVector);
@@ -152,21 +152,21 @@ Imf::Rgba Camera::calculatePixel(Ray &ray, vector<Surface *> &surfaces, vector<L
     ag = ambientLight_.g_;
     ab = ambientLight_.b_;
 
-    rgba.r += ar * closestSurface->material_.dr;
-    rgba.g += ag * closestSurface->material_.dg;
-    rgba.b += ab * closestSurface->material_.db;
+    rgba.r += ar * closestSurface->material_->dr;
+    rgba.g += ag * closestSurface->material_->dg;
+    rgba.b += ab * closestSurface->material_->db;
 
     calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT);
-    if (closestSurface->material_.ir == 0.0 && closestSurface->material_.ig == 0.0 && closestSurface->material_.ib == 0.0) {
+    if (closestSurface->material_->ir == 0.0 && closestSurface->material_->ig == 0.0 && closestSurface->material_->ib == 0.0) {
         return rgba;
     }
 
     Vec3 refRayDir = ray.direction - (currentIntersection.surfaceNormal_ * (ray.direction.dot(currentIntersection.surfaceNormal_)) * 2);
     Ray reflectedRay = Ray(currentIntersection.closestPoint_ + refRayDir * 0.05, refRayDir);
     Rgba refRgba = calculatePixel(reflectedRay, surfaces, lights, minT, maxT, recurseLimit - 1);
-    rgba.r += closestSurface->material_.ir * refRgba.r;
-    rgba.g += closestSurface->material_.ig * refRgba.g;
-    rgba.b += closestSurface->material_.ib * refRgba.b;
+    rgba.r += closestSurface->material_->ir * refRgba.r;
+    rgba.g += closestSurface->material_->ig * refRgba.g;
+    rgba.b += closestSurface->material_->ib * refRgba.b;
 
     return rgba;
 }

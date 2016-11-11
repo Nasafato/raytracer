@@ -128,7 +128,10 @@ string getTokenAsString (string inString)
 
 
 // read the scene file.
-Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::vector<Light *>& lights)
+Camera parseSceneFile (char *filename,
+    vector<Surface *>& surfaces,
+    vector<Light *>& lights,
+    vector<Material *>& materials)
 {
     Camera camera;
     Material* currentMaterial = new Material();
@@ -157,8 +160,8 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 z = getTokenAsdouble (line, 3);
                 r = getTokenAsdouble (line, 4);
 
-                Point center = Point(x, y, z);
-                Sphere *sphere = new Sphere(center, r, currentMaterial);
+
+                Sphere *sphere = new Sphere(Point(x, y, z), r, materials.back());
                 surfaces.push_back(sphere);
 
 #ifdef IM_DEBUGGING
@@ -191,7 +194,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 Vec3 normal = u.cross(v);
                 normal.normalize();
 
-                Triangle *triangle = new Triangle(p1, p2, p3, normal, currentMaterial);
+                Triangle *triangle = new Triangle(p1, p2, p3, normal, materials.back());
                 surfaces.push_back(triangle);
                 break;
 
@@ -204,7 +207,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 d = getTokenAsdouble (line, 4);
 
                 Vec3 normal = Vec3(x, y, z);
-                Plane *plane = new Plane(normal, d, currentMaterial);
+                Plane *plane = new Plane(normal, d, materials.back());
                 surfaces.push_back(plane);
 
 #ifdef IM_DEBUGGING
@@ -302,8 +305,8 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                 cout << "parameters: " << ndr << ", " << ndg << ", " << ndb << endl;
             #endif
 
-                delete currentMaterial;
-                currentMaterial = new Material(ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr);
+                Material *m = new Material(ndr, ndg, ndb, nsr, nsg, nsb, nir, nig, nib, nr);
+                materials.push_back(m);
                 break;
             }
 
@@ -347,7 +350,7 @@ Camera parseSceneFile (char *filename, std::vector<Surface *>& surfaces, std::ve
                     Vec3 normal = u.cross(v);
                     normal.normalize();
 
-                    Triangle *triangle = new Triangle(p1, p2, p3, normal, currentMaterial);
+                    Triangle *triangle = new Triangle(p1, p2, p3, normal, materials.back());
                     surfaces.push_back(triangle);
                 }
 
@@ -384,19 +387,32 @@ int main (int argc, char *argv[])
 
     vector<Surface *> surfaces;
     vector<Light *> lights;
+    vector<Material *> materials;
 
-    Camera camera = parseSceneFile (argv[1], surfaces, lights);
+    clock_t start = clock();
+
+
+    Camera camera = parseSceneFile (argv[1], surfaces, lights, materials);
     camera.writeScene(argv[2], surfaces, lights);
 
-    for (int i = 0; i < surfaces.size(); i++) {
-        delete surfaces[i];
-        surfaces[i] = NULL;
+    for (auto material: materials) {
+        delete material;
     }
 
-    for (int i = 0; i < lights.size(); i++) {
-        delete lights[i];
-        lights[i] = NULL;
+    materials.clear();
+
+    for (auto surface: surfaces) {
+        delete surface;
     }
+    surfaces.clear();
+
+    for (auto light: lights) {
+        delete light;
+    }
+    lights.clear();
+
+    double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
+    cout<< duration << "s" << endl;
 
     return 0;
 }

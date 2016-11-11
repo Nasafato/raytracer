@@ -69,7 +69,7 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
     Point maxPoint = ncenter + maxVec;
 
     boundingBox_ = BoundingBox(minPoint, maxPoint);
-    material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
+    material_ = nm;
 }
 
 
@@ -115,7 +115,7 @@ Intersection Sphere::intersect(Ray ray, double minT, double maxT) {
 Plane::Plane(Vec3 normal, double d, Material *nm) {
     normal_ = normal;
     d_ = d;
-    material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
+    material_ = nm;
 }
 
 
@@ -162,7 +162,7 @@ Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
     boundingBox_ = BoundingBox(minPoint, maxPoint);
 
     normal_ = normal;
-    material_ = Material(nm->dr, nm->dg, nm->db, nm->sr, nm->sg, nm->sb, nm->ir, nm->ig, nm->ib, nm->r);
+    material_ = nm;
 }
 
 Intersection Triangle::intersect(Ray ray, double minT, double maxT) {

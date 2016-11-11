@@ -22,7 +22,7 @@ public:
 class Surface {
 
 public:
-    Material material_;
+    Material* material_;
     BoundingBox boundingBox_;
     virtual Intersection intersect(Ray, double, double) = 0;
     virtual void getType() = 0;
