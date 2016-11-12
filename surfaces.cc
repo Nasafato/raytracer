@@ -98,7 +98,7 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
     Point minPoint = ncenter + minVec;
     Point maxPoint = ncenter + maxVec;
 
-    boundingBox_ = BoundingBox(minPoint, maxPoint);
+    bbox_ = BoundingBox(minPoint, maxPoint);
     material_ = nm;
 }
 
@@ -106,20 +106,15 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
 Intersection Sphere::intersect(Ray ray, double minT, double maxT, int flag) {
 
     Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
+    intersection.material_ = material_;
 
-
-
-    Intersection bboxIntersection = boundingBox_.intersect(ray, minT, maxT, flag);
+    Intersection bboxIntersection = bbox_.intersect(ray, minT, maxT, flag);
     if (!bboxIntersection.intersected_) {
         return intersection;
     }
 
     if (flag == 1) {
         return bboxIntersection;
-    }
-
-    if (flag == -1) {
-        // use BVH
     }
 
     Vec3 e_c = ray.origin - center_;
@@ -214,18 +209,33 @@ Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
     e = p1_.y - p3_.y;
     f = p1_.z - p3_.z;
 
-    boundingBox_ = BoundingBox(minPoint, maxPoint);
+    bbox_ = BoundingBox(minPoint, maxPoint);
 
     normal_ = normal;
     material_ = nm;
 }
 
+BoundingBox Triangle::getBoundingBox() {
+    return bbox_;
+}
+
+BoundingBox Plane::getBoundingBox() {
+    return bbox_;
+}
+
+BoundingBox Sphere::getBoundingBox() {
+    return bbox_;
+}
+
+BoundingBox BvhNode::getBoundingBox() {
+    return bbox_;
+}
+
 Intersection Triangle::intersect(Ray ray, double minT, double maxT, int flag) {
 
     Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
-    Intersection bboxIntersection = boundingBox_.intersect(ray, minT, maxT, flag);
-
-
+    Intersection bboxIntersection = bbox_.intersect(ray, minT, maxT, flag);
+    intersection.material_ = material_;
 
     if (!bboxIntersection.intersected_) {
         return intersection;
@@ -268,44 +278,95 @@ Intersection Triangle::intersect(Ray ray, double minT, double maxT, int flag) {
     return intersection;
 }
 
-// BvhNode::BvhNode() {
-//     left_ = NULL;
-//     right_ = NULL;
+BoundingBox BvhNode::combine(BoundingBox b1, BoundingBox b2) {
+    double minx, miny, minz, maxx, maxy, maxz;
+    minx = min(b1.minPoint_.x, b2.minPoint_.x);
+    miny = min(b1.minPoint_.y, b2.minPoint_.y);
+    minz = min(b1.minPoint_.z, b2.minPoint_.z);
+    maxx = max(b1.maxPoint_.x, b2.maxPoint_.x);
+    maxy = max(b1.maxPoint_.y, b2.maxPoint_.y);
+    maxz = max(b1.maxPoint_.z, b2.maxPoint_.z);
 
-// }
+    return BoundingBox(Point(minx, miny, minz), Point(maxx, maxy, maxz));
+}
 
-// BoundingBox BvhNode::combine(BoundingBox& b1, BoundingBox& b2) {
+Intersection BvhNode::intersect(Ray ray, double minT, double maxT, int flag) {
+
+    Intersection intersection = bbox_.intersect(ray, minT, maxT, flag);
+    if (!intersection.intersected_) {
+        return intersection;
+    }
+
+    Intersection leftIntersection, rightIntersection;
+    if (left_) {
+        leftIntersection = left_->intersect(ray, minT, maxT, flag);
+    }
+
+    if (right_) {
+        rightIntersection = right_->intersect(ray, minT, maxT, flag);
+    }
+
+    if (leftIntersection.intersected_ and rightIntersection.intersected_) {
+        if (leftIntersection.t_ < rightIntersection.t_) {
+            return leftIntersection;
+        } else {
+            return rightIntersection;
+        }
+    }
+
+    if (leftIntersection.intersected_) {
+        return leftIntersection;
+    }
+
+    if (rightIntersection.intersected_) {
+        return rightIntersection;
+    }
+
+    intersection.intersected_ = false;
+    return intersection;
+}
 
 
-// }
 
 
-// bool sortByX(Surface* s1, Surface* s2) { return s1->center_.x < s2->center_.x; }
-// bool sortByY(Surface* s1, Surface* s2) { return s1->center_.y < s2->center_.y; }
-// bool sortByZ(Surface* s1, Surface* s2) { return s1->center_.z < s2->center_.z; }
+bool sortByX(Surface* s1, Surface* s2) { return s1->center_.x < s2->center_.x; }
+bool sortByY(Surface* s1, Surface* s2) { return s1->center_.y < s2->center_.y; }
+bool sortByZ(Surface* s1, Surface* s2) { return s1->center_.z < s2->center_.z; }
 
-// void BvhNode::createNode(vector<Surface *> surfaces, int axis) {
-//     int n = surfaces.size();
-//     if (n == 1) {
-//         left_ = surfaces[0];
-//         right_ = NULL;
-//     } else if (n == 2) {
-//         left_ = surfaces[0];
-//         right_ = surfaces[1];
-//     } else {
-//         if (axis % 3 == 0) {
-//             sort(surfaces.begin(), surfaces.end(), sortByZ);
-//         } else if (axis % 3 == 1) {
-//             sort(surfaces.begin(), surfaces.end(), sortByY);
-//         } else {
-//             sort(surfaces.begin(), surfaces.end(), sortByX);
-//         }
-//         left_ = new BvhNode(vector<Surface *>(surfaces.begin(), surfaces.begin() + (n/2 - 1)), axis + 1 % 3);
-//         right_ = new BvhNode(vector<Surface *>(surfaces.begin() + (n/2), surfaces.end()), axis + 1 % 3);
-//         // right_ = new BvhNode(surfaces[n/2:], axis + 1 % 3);
-//         // box
-//     }
-// }
+void sortSurfacesByAxis(vector<Surface *> surfaces, int axis) {
+    if (axis % 3 == 0) {
+        sort(surfaces.begin(), surfaces.end(), sortByZ);
+    } else if (axis % 3 == 1) {
+        sort(surfaces.begin(), surfaces.end(), sortByY);
+    } else {
+        sort(surfaces.begin(), surfaces.end(), sortByX);
+    }
+
+}
+
+BvhNode::BvhNode() {
+    left_ = NULL;
+    right_ = NULL;
+}
+
+BvhNode::BvhNode(vector<Surface *> surfaces, int axis, vector<BvhNode *> bvhTree) {
+    int n = surfaces.size();
+    if (n == 1) {
+        left_ = surfaces[0];
+        right_ = NULL;
+        bbox_ = left_->getBoundingBox();
+    } else if (n == 2) {
+        left_ = surfaces[0];
+        right_ = surfaces[1];
+        bbox_ = combine(left_->getBoundingBox(), right_->getBoundingBox());
+    } else {
+        sortSurfacesByAxis(surfaces, axis);
+        left_ = new BvhNode(vector<Surface *>(surfaces.begin(), surfaces.begin() + (n/2)), axis + 1 % 3, bvhTree);
+        right_ = new BvhNode(vector<Surface *>(surfaces.begin() + (n/2), surfaces.end()), axis + 1 % 3, bvhTree);
+        bbox_ = combine(left_->getBoundingBox(), right_->getBoundingBox());
+    }
+    bvhTree.push_back(this);
+}
 
 void Plane::getType() {
     std::cout << "plane";
@@ -317,4 +378,8 @@ void Sphere::getType() {
 
 void Triangle::getType() {
     std::cout << "triangle";
+}
+
+void BvhNode::getType() {
+    cout << "bvhnode";
 }

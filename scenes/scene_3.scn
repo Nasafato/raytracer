@@ -1,18 +1,22 @@
 / camera: pointing towards -Z, 35mmx25mm "film", 35mm focal length
 / making 320x240 pixels
-c 24.2 29.3 53.6 0.0 0.0 -1.0 35.0 35.0 25.0 320 240
+/ c 24.2 29.3 53.6 0.0 0.0 -1.0 35.0 35.0 25.0 960 720
 
 / alternate camera:
-/c 170. 222. 83. -.5 -.7 -.5 35.0 35.0 25.0 640 480
+c 170. 222. 83. -.5 -.7 -.5 35.0 35.0 25.0 960 720
 
-/ grey diffuse material
+// grey diffuse material
 m 0.5 0.5 0.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-p  0.0 1.0 0.0 0.0
 
+/ ground plane: two large triangles
+t -500.0 -22.0 500.0 500.0 -22.0 500.0 -500.0 -22.0 -500.0
+t -500.0 -22.0 -500.0 500.0 -22.0 500.00 500.0 -22.0 -500.0
 
 / one point light:
 l p -80. 120. -46.6 8000.0 8000.0 8000.0
 
+/ one ambient light
+l a .05 .05 .05
 
 / red material, w/ specular highlight
 m 0.7 0.0 0.0 0.5 0.5 0.5 100. 0.0 0.0 0.0

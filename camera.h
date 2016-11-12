@@ -34,12 +34,12 @@ public:
 
     Camera();
     Camera(Point, Vec3, double, double, double, int, int);
-    void writeScene(const char[], std::vector<Surface *>&, std::vector<Light *>&, int flag);
+    void writeScene(const char[], BvhNode* bvhRoot, std::vector<Surface *>&, std::vector<Light *>&, int flag);
 
 private:
     Ray getRayForPixel(int, int);
-    Vec3 calculatePixel(Ray&, int rayType, std::vector<Surface *>&, std::vector<Light *>&, double, double, int, int);
-    void calculateShading(Vec3&, Ray&, Intersection&, Material*, std::vector<Light *>&, std::vector<Surface *>&, double, double, bool, int);
+    Vec3 calculatePixel(Ray&, int rayType, BvhNode* bvhRoot, std::vector<Surface *>&, std::vector<Light *>&, double, double, int, int);
+    void calculateShading(Vec3&, Ray&, BvhNode* bvhRoot, Intersection&, Material*, std::vector<Light *>&, std::vector<Surface *>&, double, double, bool, int);
     void writeRgba(const char[], const Imf::Rgba *, int, int);
 
 };

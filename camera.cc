@@ -69,7 +69,7 @@ Ray Camera::getRayForPixel(int x, int y) {
     return Ray(eye, dir);
 }
 
-void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, Material* material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT, bool flipped, int flag) {
+void Camera::calculateShading(Vec3 &rgba, Ray &ray, BvhNode* bvhRoot, Intersection &intersection, Material* material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT, bool flipped, int flag) {
 
     for (auto light: lights) {
         if (light->getType() != 'p') {
@@ -85,14 +85,18 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
         Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.001, lightVector);
 
         // See if the shadow ray intersects an object
-        for (auto surface: surfaces) {
-            Intersection potentialIntersection = surface->intersect(lightRay, minT, maxT, flag);
-            if (potentialIntersection.intersected_) {
-                Vec3 unNormalizedLightVector = (light->position_ - intersection.closestPoint_);
-                double distance = std::sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
-                if (potentialIntersection.t_ <= distance) {
-                    lightIntersection = potentialIntersection;
-                    break;
+        if (flag == -1) {
+            lightIntersection = bvhRoot->intersect(lightRay, minT, maxT, flag);
+        } else {
+            for (auto surface: surfaces) {
+                Intersection potentialIntersection = surface->intersect(lightRay, minT, maxT, flag);
+                if (potentialIntersection.intersected_) {
+                    Vec3 unNormalizedLightVector = (light->position_ - intersection.closestPoint_);
+                    double distance = std::sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
+                    if (potentialIntersection.t_ <= distance) {
+                        lightIntersection = potentialIntersection;
+                        break;
+                    }
                 }
             }
         }
@@ -115,7 +119,7 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
     }
 }
 
-Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces,
+Vec3 Camera::calculatePixel(Ray &ray, int rayType, BvhNode* bvhRoot, vector<Surface *> &surfaces,
                             vector<Light *> &lights, double minT, double maxT,
                             int recurseLimit, int flag) {
     Vec3 rgba = Vec3(0.0, 0.0, 0.0);
@@ -124,15 +128,23 @@ Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces,
     }
 
     Intersection currentIntersection;
-    Surface* closestSurface = NULL;
+    Material* material = NULL;
     double currentMinT = maxT;
 
-    for (auto surface: surfaces) {
-        Intersection intersection = surface->intersect(ray, minT, maxT, flag);
-        if (intersection.intersected_ && intersection.t_ < currentMinT) {
-            currentMinT = intersection.t_;
-            closestSurface = surface;
-            currentIntersection = intersection;
+    if (flag == -1) {
+        currentIntersection = bvhRoot->intersect(ray, minT, maxT, flag);
+        if (currentIntersection.intersected_) {
+            cout << currentIntersection.intersected_ << endl;
+        }
+        material = currentIntersection.material_;
+    } else {
+        for (auto surface: surfaces) {
+            Intersection intersection = surface->intersect(ray, minT, maxT, flag);
+            if (intersection.intersected_ && intersection.t_ < currentMinT) {
+                currentMinT = intersection.t_;
+                material = surface->material_;
+                currentIntersection = intersection;
+            }
         }
     }
 
@@ -151,20 +163,20 @@ Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces,
         if (flipped) {
             rgba += ambientLight_.rgb_ * Vec3(1.0, 1.0, 0.0);
         } else {
-            rgba += ambientLight_.rgb_ * closestSurface->material_->diffuse_;
+            rgba += ambientLight_.rgb_ * material->diffuse_;
         }
     }
 
-    calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT, flipped, flag);
-    if (closestSurface->material_->idealSpecular_ == Vec3(0.0, 0.0, 0.0) || flipped) {
+    calculateShading(rgba, ray, bvhRoot, currentIntersection, material, lights, surfaces, minT, maxT, flipped, flag);
+    if (material->idealSpecular_ == Vec3(0.0, 0.0, 0.0) || flipped) {
         return rgba;
     }
 
     Vec3 refRayDir = ray.direction - (currentIntersection.surfaceNormal_ * (ray.direction.dot(currentIntersection.surfaceNormal_)) * 2);
     Ray reflectedRay = Ray(currentIntersection.closestPoint_ + refRayDir * 0.05, refRayDir);
-    Vec3 refRgba = calculatePixel(reflectedRay, 2, surfaces, lights, minT, maxT, recurseLimit - 1, flag);
+    Vec3 refRgba = calculatePixel(reflectedRay, 2, bvhRoot, surfaces, lights, minT, maxT, recurseLimit - 1, flag);
 
-    rgba += (closestSurface->material_->idealSpecular_ * refRgba);
+    rgba += (material->idealSpecular_ * refRgba);
 
     return rgba;
 }
@@ -175,7 +187,7 @@ void Camera::writeRgba (const char fileName[], const Imf::Rgba *pixels, int widt
     file.writePixels (height);
 }
 
-void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vector<Light *> &lights, int flag) {
+void Camera::writeScene(const char filename[], BvhNode* bvhRoot, vector<Surface *> &surfaces, vector<Light *> &lights, int flag) {
     Imf::Array2D<Imf::Rgba> pixels;
     pixels.resizeErase(heightPixels, widthPixels);
 
@@ -185,7 +197,7 @@ void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vect
             int recurseLimit = 5;
             double minT = 0.001;
             double maxT = std::numeric_limits<double>::max();;
-            Vec3 colors = calculatePixel(ray, 1, surfaces, lights, minT, maxT, recurseLimit, flag);
+            Vec3 colors = calculatePixel(ray, 1, bvhRoot, surfaces, lights, minT, maxT, recurseLimit, flag);
             pixels[y][x] = Rgba(colors.x, colors.y, colors.z, 1.0);
         }
     }
