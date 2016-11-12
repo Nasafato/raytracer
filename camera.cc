@@ -133,9 +133,6 @@ Vec3 Camera::calculatePixel(Ray &ray, int rayType, BvhNode* bvhRoot, vector<Surf
 
     if (flag == -1) {
         currentIntersection = bvhRoot->intersect(ray, minT, maxT, flag);
-        if (currentIntersection.intersected_) {
-            cout << currentIntersection.intersected_ << endl;
-        }
         material = currentIntersection.material_;
     } else {
         for (auto surface: surfaces) {

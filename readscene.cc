@@ -406,12 +406,7 @@ int main (int argc, char *argv[])
     Camera camera = parseSceneFile (argv[1], surfaces, lights, materials);
 
     vector<BvhNode*> bvhTree;
-    clock_t createBvh = clock();
     BvhNode* bvhRoot = new BvhNode(surfaces, 0, bvhTree);
-
-    double bvhCreate = (clock() - createBvh) / (double) CLOCKS_PER_SEC;
-    cout<< bvhCreate << "s" << endl;
-    cout << "BvhBBox: " << bvhRoot->bbox_ << endl;
 
     camera.writeScene(argv[2], bvhRoot, surfaces, lights, flag);
 
