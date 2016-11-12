@@ -69,7 +69,7 @@ Ray Camera::getRayForPixel(int x, int y) {
     return Ray(eye, dir);
 }
 
-void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, Material* material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT) {
+void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, Material* material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT, bool flipped) {
 
     for (auto light: lights) {
         if (light->getType() != 'p') {
@@ -77,7 +77,7 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
         }
 
         Vec3 lightVector = (light->position_ - intersection.closestPoint_).normalize();
-        Vec3 normal = intersection.surfaceNormal_;
+        Vec3 normal = flipped ? (intersection.surfaceNormal_ * -1.0) : intersection.surfaceNormal_;
         Vec3 v = ray.direction.reverse().normalize();
         Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
 
@@ -97,6 +97,7 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
             }
         }
 
+
         // if (normalDotLight < 0.0) {
         //     dr = 1.0;
         //     dg = 1.0;
@@ -106,14 +107,19 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
         //     sb = 0.0;
         //     normalDotLight *= -1.0;
         // }
+        if (lightIntersection.intersected_ == true) {
+            return;
+        }
 
-        double phong = material->r_;
         double normalDotLight = normal.dot(lightVector);
-        double normalDotH = normal.dot(h);
         double attenuationFactor = 1.0 / pow((light->position_ - intersection.closestPoint_).magnitude(), 2.0);
+        double normalDotH = normal.dot(h);
 
-        if (lightIntersection.intersected_ == false) {
-            rgba += (material->lambertianShading(normalDotLight) + material->phongShading(normalDotH, phong)) * (light->getRgb() * attenuationFactor);
+        if (flipped) {
+            rgba += Material::backShading(normalDotLight, light->getRgb()) * attenuationFactor;
+        } else {
+            rgba += (material->lambertianShading(normalDotLight) + material->phongShading(normalDotH)) *
+                    (light->getRgb() *attenuationFactor);
         }
     }
 }
@@ -142,10 +148,20 @@ Vec3 Camera::calculatePixel(Ray &ray, vector<Surface *> &surfaces, vector<Light 
     }
 
     // add ambient stuff
-    rgba += ambientLight_.rgb_ * closestSurface->material_->diffuse_;
 
-    calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT);
-    if (closestSurface->material_->idealSpecular_ == Vec3(0.0, 0.0, 0.0)) {
+    bool flipped = false;
+    if (-1.0 * ray.direction.dot(currentIntersection.surfaceNormal_) < 0.0) {
+        flipped = true;
+    }
+
+    if (flipped) {
+        rgba += ambientLight_.rgb_ * Vec3(1.0, 1.0, 0.0);
+    } else {
+        rgba += ambientLight_.rgb_ * closestSurface->material_->diffuse_;
+    }
+
+    calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT, flipped);
+    if (closestSurface->material_->idealSpecular_ == Vec3(0.0, 0.0, 0.0) || flipped) {
         return rgba;
     }
 
@@ -171,7 +187,7 @@ void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vect
     for (int y = 0; y < heightPixels; y++) {
         for (int x = 0; x < widthPixels; x++) {
             Ray ray = getRayForPixel(x, y);
-            int recurseLimit = 20;
+            int recurseLimit = 10;
             double minT = 0.001;
             double maxT = std::numeric_limits<double>::max();;
             Vec3 colors = calculatePixel(ray, surfaces, lights, minT, maxT, recurseLimit);

@@ -19,8 +19,9 @@ public:
     Material();
     Material(double, double, double, double, double, double, double, double, double, double);
 
-    Vec3 phongShading(const double normalDotH, const double phong) const;
-    Vec3 lambertianShading(const double normalDotLight) const;
+    Vec3 phongShading(const double& normalDotH) const;
+    Vec3 lambertianShading(const double& normalDotLight) const;
+    static Vec3 backShading (const double& normalDotLight, const Vec3& lightRgb);
 
 };
 

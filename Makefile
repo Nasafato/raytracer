@@ -2,6 +2,13 @@ all:
 	g++ -g -Wall -o prog_out -I/usr/include/OpenEXR -I/usr/local/include/OpenEXR -lIlmImf -lImath -lHalf -L/usr/local/lib -std=c++11 \
 	-Wno-deprecated-register *.cc
 
+1.3:
+	./prog_out output_hw_1.3/t1.scn output_hw_1.3/t1.exr; \
+	./prog_out output_hw_1.3/t2.scn output_hw_1.3/t2.exr; \
+	./prog_out output_hw_1.3/t3.scn output_hw_1.3/t3.exr; \
+	./prog_out output_hw_1.3/t4.scn output_hw_1.3/t4.exr; \
+	./prog_out output_hw_1.3/t5.scn output_hw_1.3/t5.exr;
+
 
 test:
 	./prog_out scenes/scene_1.scn output_test/scene_1-test.exr; \
@@ -11,6 +18,7 @@ test:
 	./prog_out scenes/scene_5.scn output_test/scene_5-test.exr; \
 	./prog_out scenes/scene_7.scn output_test/scene_7-test.exr; \
 	./prog_out scenes/scene_8.scn output_test/scene_8-test.exr; \
+	./prog_out scenes/scene_11.scn output_test/scene_11-test.exr;
 
 submit:
 	./prog_out scenes/scene_1.scn output_submission/scene_1-submission.exr; \
