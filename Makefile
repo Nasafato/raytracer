@@ -45,4 +45,7 @@ box:
 	./prog_out scenes/scene_2.scn output_test/args_scene_2.exr 1; \
 	./prog_out scenes/scene_3.scn output_test/args_scene_3.exr 1; \
 	./prog_out scenes/scene_4.scn output_test/args_scene_4.exr 1; \
-	./prog_out scenes/scene_5.scn output_test/args_scene_5.exr 1;
+	./prog_out scenes/scene_5.scn output_test/args_scene_5.exr 1; \
+	./prog_out scenes/scene_7.scn output_test/args_scene_7-test.exr 1; \
+	./prog_out scenes/scene_8.scn output_test/args_scene_8-test.exr 1; \
+	./prog_out scenes/scene_11.scn output_test/args_scene_11-test.exr 1;

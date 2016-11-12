@@ -182,7 +182,7 @@ void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vect
     for (int y = 0; y < heightPixels; y++) {
         for (int x = 0; x < widthPixels; x++) {
             Ray ray = getRayForPixel(x, y);
-            int recurseLimit = 1;
+            int recurseLimit = 5;
             double minT = 0.001;
             double maxT = std::numeric_limits<double>::max();;
             Vec3 colors = calculatePixel(ray, 1, surfaces, lights, minT, maxT, recurseLimit, flag);
