@@ -14,6 +14,11 @@ public:
     Vec3 operator - (const Vec3&) const;
     Vec3 operator + (const Vec3&) const;
     Vec3 operator / (const double&) const;
+    Vec3& operator += (const Vec3&);
+    Vec3& operator *= (const double& m);
+    Vec3& operator *= (const Vec3& v);
+
+    bool operator == (const Vec3&) const;
 
     double magnitude() const;
     double dot(const Vec3&) const;

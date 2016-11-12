@@ -34,6 +34,32 @@ Vec3 Vec3::operator + (const Vec3& v) const {
     return Vec3(x + v.x, y + v.y, z + v.z);
 }
 
+Vec3& Vec3::operator += (const Vec3& v) {
+    x += v.x;
+    y += v.y;
+    z += v.z;
+    return (*this);
+}
+
+Vec3& Vec3::operator *= (const double& m) {
+    x *= m;
+    y *= m;
+    z *= m;
+    return (*this);
+}
+
+Vec3& Vec3::operator *= (const Vec3& v) {
+    x *= v.x;
+    y *= v.y;
+    z *= v.z;
+    return (*this);
+}
+
+
+bool Vec3::operator == (const Vec3& v) const {
+    return x == v.x && y == v.y && z == v.z;
+}
+
 Vec3 Vec3::reverse() const {
     return Vec3(x * -1.0, y * -1.0, z * -1.0);
 }

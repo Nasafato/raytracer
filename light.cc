@@ -2,26 +2,34 @@
 
 PointLight::PointLight() {
     position_ = Point(0.0, 0.0, 0.0);
-    r = 0.0;
-    g = 0.0;
-    b = 0.0;
+    rgb_ = Vec3(0.0, 0.0, 0.0);
 }
 
 PointLight::PointLight(Point pos, double nr, double ng, double nb) {
     position_ = pos;
-    r = nr;
-    g = ng;
-    b = nb;
+    rgb_ = Vec3(nr, ng, nb);
+}
+
+Vec3 PointLight::getRgb() const {
+    return rgb_;
+}
+
+char PointLight::getType() const {
+    return 'p';
 }
 
 AmbientLight::AmbientLight() {
-    r_ = 0.0;
-    g_ = 0.0;
-    b_ = 0.0;
+    rgb_ = Vec3(0.0, 0.0, 0.0);
 }
 
 AmbientLight::AmbientLight(double r, double g, double b) {
-    r_ = r;
-    g_ = g;
-    b_ = b;
+    rgb_ = Vec3(r, g, b);
+}
+
+Vec3 AmbientLight::getRgb() const {
+    return rgb_;
+}
+
+char AmbientLight::getType() const {
+    return 'a';
 }

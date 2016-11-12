@@ -1,5 +1,7 @@
 all:
-	g++ -g -Wall -o prog_out -I/usr/include/OpenEXR -I/usr/local/include/OpenEXR -lIlmImf -lImath -lHalf -L/usr/local/lib -Wc++11-extensions *.cc
+	g++ -g -Wall -o prog_out -I/usr/include/OpenEXR -I/usr/local/include/OpenEXR -lIlmImf -lImath -lHalf -L/usr/local/lib -std=c++11 \
+	-Wno-deprecated-register *.cc
+
 
 test:
 	./prog_out scenes/scene_1.scn output_test/scene_1-test.exr; \

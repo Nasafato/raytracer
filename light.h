@@ -6,21 +6,26 @@
 class Light {
 
 public:
-    double r, g, b;
+    Vec3 rgb_;
     Point position_;
+    virtual char getType() const = 0;
+    virtual Vec3 getRgb() const = 0;
 };
 
 class PointLight: public Light {
 public:
     PointLight();
     PointLight(Point, double, double, double);
+    char getType() const;
+    Vec3 getRgb() const;
 };
 
-class AmbientLight {
+class AmbientLight: public Light{
 public:
-    double r_, g_, b_;
     AmbientLight();
     AmbientLight(double, double, double);
+    char getType() const;
+    Vec3 getRgb() const;
 };
 
 
