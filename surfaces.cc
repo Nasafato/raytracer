@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include "surfaces.h"
 
 using namespace std;
@@ -58,8 +59,11 @@ bool BoundingBox::intersect(Ray ray, double minT, double maxT) {
     }
 }
 
+
+
+
 Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
-    center = ncenter;
+    center_ = ncenter;
     radius = nradius;
 
     Vec3 minVec = Vec3(-nradius, -nradius, -nradius);
@@ -81,7 +85,7 @@ Intersection Sphere::intersect(Ray ray, double minT, double maxT) {
         return intersection;
     }
 
-    Vec3 e_c = ray.origin - center;
+    Vec3 e_c = ray.origin - center_;
     Vec3 d = ray.direction;
     double d_dot_d = d.dot(d);
     double discriminantTermOne = d.dot(e_c) * d.dot(e_c);
@@ -103,7 +107,7 @@ Intersection Sphere::intersect(Ray ray, double minT, double maxT) {
         intersection.t_ = minT;
         intersection.intersected_ = true;
         intersection.discriminant_ = discriminant;
-        intersection.surfaceNormal_ = (closestPoint - center) / radius;
+        intersection.surfaceNormal_ = (closestPoint - center_) / radius;
         if (intersection.surfaceNormal_.magnitude() > 1.0) {
             intersection.surfaceNormal_.normalize();
         }
@@ -146,6 +150,12 @@ Intersection Plane::intersect(Ray ray, double minT, double maxT) {
 Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
     Point minPoint = Point(p1.x, p1.y, p1.z);
     Point maxPoint = Point(p1.x, p1.y, p1.z);
+
+    double cx = (p1.x + p2.x + p3.x) / 3;
+    double cy = (p1.y + p2.y + p3.y) / 3;
+    double cz = (p1.z + p2.z + p3.z) / 3;
+
+    center_ = Point(cx, cy, cz);
 
     p1_ = p1;
     p2_ = p2;
@@ -212,6 +222,40 @@ Intersection Triangle::intersect(Ray ray, double minT, double maxT) {
 
     return intersection;
 }
+
+// BvhNode::BvhNode() {
+//     left_ = NULL;
+//     right_ = NULL;
+
+// }
+
+
+// bool sortByX(Surface* s1, Surface* s2) { return s1->center_.x < s2->center_.x; }
+// bool sortByY(Surface* s1, Surface* s2) { return s1->center_.y < s2->center_.y; }
+// bool sortByZ(Surface* s1, Surface* s2) { return s1->center_.z < s2->center_.z; }
+
+// void BvhNode::createNode(vector<Surface *> surfaces, int axis) {
+//     int n = surfaces.size();
+//     if (n == 1) {
+//         left_ = surfaces[0];
+//         right_ = NULL;
+//     } else if (n == 2) {
+//         left_ = surfaces[0];
+//         right_ = surfaces[1];
+//     } else {
+//         if (axis % 3 == 0) {
+//             sort(surfaces.begin(), surfaces.end(), sortByZ);
+//         } else if (axis % 3 == 1) {
+//             sort(surfaces.begin(), surfaces.end(), sortByY);
+//         } else {
+//             sort(surfaces.begin(), surfaces.end(), sortByX);
+//         }
+//         left_ = new BvhNode(vector<Surface *>(surfaces.begin(), surfaces.begin() + (n/2 - 1)), axis + 1 % 3);
+//         right_ = new BvhNode(vector<Surface *>(surfaces.begin() + (n/2), surfaces.end()), axis + 1 % 3);
+//         // right_ = new BvhNode(surfaces[n/2:], axis + 1 % 3);
+//         // box
+//     }
+// }
 
 void Plane::getType() {
     std::cout << "plane";

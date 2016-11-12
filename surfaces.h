@@ -7,7 +7,7 @@
 #include "material.h"
 #include "light.h"
 #include "intersection.h"
-
+#include <vector>
 
 class BoundingBox {
 
@@ -23,6 +23,7 @@ class Surface {
 
 public:
     Material* material_;
+    Point center_;
     BoundingBox boundingBox_;
     virtual Intersection intersect(Ray, double, double) = 0;
     virtual void getType() = 0;
@@ -31,7 +32,6 @@ public:
 class Sphere: public Surface {
 
 protected:
-    Point center;
     double radius;
 
 public:
@@ -64,6 +64,18 @@ public:
     void getType();
 };
 
+// class BvhNode: public Surface {
+
+// public:
+//     Intersection intersect(Ray, double, double);
+//     BvhNode();
+//     Surface *left_;
+//     Surface *right_;
+//     BoundingBox thisBoundingBox_;
+//     void createNode(std::vector<Surface *>, int);
+//     void getType();
+
+// };
 
 
 #endif
