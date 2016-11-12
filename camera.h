@@ -38,7 +38,7 @@ public:
 
 private:
     Ray getRayForPixel(int, int);
-    Vec3 calculatePixel(Ray&, std::vector<Surface *>&, std::vector<Light *>&, double, double, int);
+    Vec3 calculatePixel(Ray&, int rayType, std::vector<Surface *>&, std::vector<Light *>&, double, double, int);
     void calculateShading(Vec3&, Ray&, Intersection&, Material*, std::vector<Light *>&, std::vector<Surface *>&, double, double, bool);
     void writeRgba(const char[], const Imf::Rgba *, int, int);
 

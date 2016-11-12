@@ -124,7 +124,7 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
     }
 }
 
-Vec3 Camera::calculatePixel(Ray &ray, vector<Surface *> &surfaces, vector<Light *> &lights, double minT, double maxT, int recurseLimit) {
+Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces, vector<Light *> &lights, double minT, double maxT, int recurseLimit) {
     Vec3 rgba = Vec3(0.0, 0.0, 0.0);
     if (recurseLimit == 0) {
         return rgba;
@@ -154,10 +154,12 @@ Vec3 Camera::calculatePixel(Ray &ray, vector<Surface *> &surfaces, vector<Light 
         flipped = true;
     }
 
-    if (flipped) {
-        rgba += ambientLight_.rgb_ * Vec3(1.0, 1.0, 0.0);
-    } else {
-        rgba += ambientLight_.rgb_ * closestSurface->material_->diffuse_;
+    if (rayType == 1) {
+        if (flipped) {
+            rgba += ambientLight_.rgb_ * Vec3(1.0, 1.0, 0.0);
+        } else {
+            rgba += ambientLight_.rgb_ * closestSurface->material_->diffuse_;
+        }
     }
 
     calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT, flipped);
@@ -167,7 +169,7 @@ Vec3 Camera::calculatePixel(Ray &ray, vector<Surface *> &surfaces, vector<Light 
 
     Vec3 refRayDir = ray.direction - (currentIntersection.surfaceNormal_ * (ray.direction.dot(currentIntersection.surfaceNormal_)) * 2);
     Ray reflectedRay = Ray(currentIntersection.closestPoint_ + refRayDir * 0.05, refRayDir);
-    Vec3 refRgba = calculatePixel(reflectedRay, surfaces, lights, minT, maxT, recurseLimit - 1);
+    Vec3 refRgba = calculatePixel(reflectedRay, 2, surfaces, lights, minT, maxT, recurseLimit - 1);
 
     rgba += (closestSurface->material_->idealSpecular_ * refRgba);
 
@@ -190,7 +192,7 @@ void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vect
             int recurseLimit = 10;
             double minT = 0.001;
             double maxT = std::numeric_limits<double>::max();;
-            Vec3 colors = calculatePixel(ray, surfaces, lights, minT, maxT, recurseLimit);
+            Vec3 colors = calculatePixel(ray, 1, surfaces, lights, minT, maxT, recurseLimit);
             pixels[y][x] = Rgba(colors.x, colors.y, colors.z, 1.0);
         }
     }
