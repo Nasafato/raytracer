@@ -16,7 +16,7 @@ public:
     Point maxPoint_;
     BoundingBox();
     BoundingBox(Point, Point);
-    bool intersect(Ray, double, double);
+    Intersection intersect(Ray, double, double, int);
 };
 
 class Surface {
@@ -25,7 +25,7 @@ public:
     Material* material_;
     Point center_;
     BoundingBox boundingBox_;
-    virtual Intersection intersect(Ray, double, double) = 0;
+    virtual Intersection intersect(Ray, double, double, int) = 0;
     virtual void getType() = 0;
 };
 
@@ -35,7 +35,7 @@ protected:
     double radius;
 
 public:
-    Intersection intersect(Ray, double, double);
+    Intersection intersect(Ray, double, double, int);
     Sphere(Point, double, Material *);
     void getType();
 };
@@ -47,7 +47,7 @@ private:
     double d_;
 
 public:
-    Intersection intersect(Ray, double, double);
+    Intersection intersect(Ray, double, double, int);
     Plane(Vec3, double d, Material *);
     void getType();
 };
@@ -55,11 +55,18 @@ public:
 class Triangle: public Surface {
 
 private:
+    double a;
+    double b;
+    double c;
+
+    double d;
+    double e;
+    double f;
     Point p1_, p2_, p3_;
     Vec3 normal_;
 
 public:
-    Intersection intersect(Ray, double, double);
+    Intersection intersect(Ray, double, double, int);
     Triangle(Point, Point, Point, Vec3, Material *);
     void getType();
 };

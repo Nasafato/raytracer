@@ -15,7 +15,7 @@ BoundingBox::BoundingBox(Point minPoint, Point maxPoint) {
     maxPoint_ = maxPoint;
 }
 
-bool BoundingBox::intersect(Ray ray, double minT, double maxT) {
+Intersection BoundingBox::intersect(Ray ray, double minT, double maxT, int flag) {
     Vec3 d = ray.direction;
 
     double t_xmin;
@@ -52,10 +52,36 @@ bool BoundingBox::intersect(Ray ray, double minT, double maxT) {
         t_zmin = a_z * (maxPoint_.z - ray.origin.z);
     }
 
-    if ((t_xmin > t_ymax) || (t_xmin > t_zmax) || (t_ymin > t_xmax) || (t_ymin > t_zmax) || (t_zmin > t_xmax) || (t_zmin > t_ymax)) {
-        return false;
+    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
+
+    if ((t_xmin > t_ymax) || (t_xmin > t_zmax)
+        || (t_ymin > t_xmax) || (t_ymin > t_zmax)
+        || (t_zmin > t_xmax) || (t_zmin > t_ymax)) {
+        return intersection;
     } else {
-        return true;
+        // cout << t_xmin << ", " << t_ymin << ", " << t_zmin << endl;
+        t_xmin = max((double)0.0, t_xmin);
+        t_ymin = max((double)0.0, t_ymin);
+        t_zmin = max((double)0.0, t_zmin);
+        intersection.t_ = max(max(t_xmin, t_ymin), t_zmin);
+        // cout << "min is " << intersection.t_ << endl;
+        if (intersection.t_ <= 0.0) {
+            return intersection;
+        }
+        intersection.intersected_ = true;
+        intersection.closestPoint_ = ray.origin + d * intersection.t_;
+        Vec3 normal;
+        if (intersection.t_ == t_xmin) {
+            normal = a_x >= 0 ? Vec3(-1.0, 0.0, 0.0) : Vec3(1.0, 0.0, 0.0);
+        } else if (intersection.t_ == t_ymin) {
+            normal = a_y >= 0 ? Vec3(0.0, -1.0, 0.0) : Vec3(0.0, 1.0, 0.0);
+        } else if (intersection.t_ == t_zmin) {
+            normal = a_z >= 0 ? Vec3(0.0, 0.0, -1.0) : Vec3(0.0, 0.0, 1.0);
+        }
+        intersection.surfaceNormal_ = normal;
+        // cout << "Intersection is " << t << endl;
+        // cout << "Normal is " << normal << endl;
+        return intersection;
     }
 }
 
@@ -77,12 +103,23 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
 }
 
 
-Intersection Sphere::intersect(Ray ray, double minT, double maxT) {
+Intersection Sphere::intersect(Ray ray, double minT, double maxT, int flag) {
 
     Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
 
-    if (!boundingBox_.intersect(ray, minT, maxT)) {
+
+
+    Intersection bboxIntersection = boundingBox_.intersect(ray, minT, maxT, flag);
+    if (!bboxIntersection.intersected_) {
         return intersection;
+    }
+
+    if (flag == 1) {
+        return bboxIntersection;
+    }
+
+    if (flag == -1) {
+        // use BVH
     }
 
     Vec3 e_c = ray.origin - center_;
@@ -123,7 +160,7 @@ Plane::Plane(Vec3 normal, double d, Material *nm) {
 }
 
 
-Intersection Plane::intersect(Ray ray, double minT, double maxT) {
+Intersection Plane::intersect(Ray ray, double minT, double maxT, int flag) {
     Intersection intersection;
 
     double numerator = -(ray.origin.toVec3().dot(normal_) - d_);
@@ -169,26 +206,34 @@ Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
     maxPoint.y = max(max(p1.y, p2.y), p3.y);
     maxPoint.z = max(max(p1.z, p2.z), p3.z);
 
+    a = p1_.x - p2_.x;
+    b = p1_.y - p2_.y;
+    c = p1_.z - p2_.z;
+
+    d = p1_.x - p3_.x;
+    e = p1_.y - p3_.y;
+    f = p1_.z - p3_.z;
+
     boundingBox_ = BoundingBox(minPoint, maxPoint);
 
     normal_ = normal;
     material_ = nm;
 }
 
-Intersection Triangle::intersect(Ray ray, double minT, double maxT) {
-    Intersection intersection;
+Intersection Triangle::intersect(Ray ray, double minT, double maxT, int flag) {
 
-    if (!boundingBox_.intersect(ray, minT, maxT)) {
+    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
+    Intersection bboxIntersection = boundingBox_.intersect(ray, minT, maxT, flag);
+
+
+
+    if (!bboxIntersection.intersected_) {
         return intersection;
     }
 
-    double a = p1_.x - p2_.x;
-    double b = p1_.y - p2_.y;
-    double c = p1_.z - p2_.z;
-
-    double d = p1_.x - p3_.x;
-    double e = p1_.y - p3_.y;
-    double f = p1_.z - p3_.z;
+    if (flag == 1) {
+        return bboxIntersection;
+    }
 
     double j = p1_.x - ray.origin.x;
     double k = p1_.y - ray.origin.y;
@@ -226,6 +271,11 @@ Intersection Triangle::intersect(Ray ray, double minT, double maxT) {
 // BvhNode::BvhNode() {
 //     left_ = NULL;
 //     right_ = NULL;
+
+// }
+
+// BoundingBox BvhNode::combine(BoundingBox& b1, BoundingBox& b2) {
+
 
 // }
 

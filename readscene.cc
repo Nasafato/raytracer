@@ -380,8 +380,8 @@ Camera parseSceneFile (char *filename,
 int main (int argc, char *argv[])
 {
 
-    if (argc != 3) {
-        cerr << "useage: raytra scenefilename" << endl;
+    if (argc < 3) {
+        cerr << "useage: raytra scenefilename [optional - flag_render_boxes]" << endl;
         return -1;
     }
 
@@ -391,9 +391,19 @@ int main (int argc, char *argv[])
 
     clock_t start = clock();
 
+    int flag = -1;
+    if (argc == 4) {
+        if (strcmp(argv[3], "0") == 0) {
+            flag = 0;
+            cout << "Flag is 0" << endl;
+        } else if (strcmp(argv[3], "1") == 0) {
+            flag = 1;
+            cout << "Flag is 1" << endl;
+        }
+    }
 
     Camera camera = parseSceneFile (argv[1], surfaces, lights, materials);
-    camera.writeScene(argv[2], surfaces, lights);
+    camera.writeScene(argv[2], surfaces, lights, flag);
 
     for (auto material: materials) {
         delete material;

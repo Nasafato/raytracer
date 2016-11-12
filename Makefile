@@ -39,3 +39,10 @@ teapot:
 
 bunny:
 	./prog_out scenes/bunny.scn output_test/bunny.exr;
+
+box:
+	./prog_out scenes/scene_1.scn output_test/args_scene_1.exr 1; \
+	./prog_out scenes/scene_2.scn output_test/args_scene_2.exr 1; \
+	./prog_out scenes/scene_3.scn output_test/args_scene_3.exr 1; \
+	./prog_out scenes/scene_4.scn output_test/args_scene_4.exr 1; \
+	./prog_out scenes/scene_5.scn output_test/args_scene_5.exr 1;

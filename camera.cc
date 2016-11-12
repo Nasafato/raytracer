@@ -69,7 +69,7 @@ Ray Camera::getRayForPixel(int x, int y) {
     return Ray(eye, dir);
 }
 
-void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, Material* material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT, bool flipped) {
+void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, Material* material, vector<Light *> &lights, vector<Surface *> &surfaces, double minT, double maxT, bool flipped, int flag) {
 
     for (auto light: lights) {
         if (light->getType() != 'p') {
@@ -82,11 +82,11 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
         Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
 
         Intersection lightIntersection;
-        Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.05, lightVector);
+        Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.001, lightVector);
 
         // See if the shadow ray intersects an object
         for (auto surface: surfaces) {
-            Intersection potentialIntersection = surface->intersect(lightRay, minT, maxT);
+            Intersection potentialIntersection = surface->intersect(lightRay, minT, maxT, flag);
             if (potentialIntersection.intersected_) {
                 Vec3 unNormalizedLightVector = (light->position_ - intersection.closestPoint_);
                 double distance = std::sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
@@ -97,16 +97,6 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
             }
         }
 
-
-        // if (normalDotLight < 0.0) {
-        //     dr = 1.0;
-        //     dg = 1.0;
-        //     db = 0.0;
-        //     sr = 0.0;
-        //     sg = 0.0;
-        //     sb = 0.0;
-        //     normalDotLight *= -1.0;
-        // }
         if (lightIntersection.intersected_ == true) {
             return;
         }
@@ -118,13 +108,16 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, Intersection &intersection, 
         if (flipped) {
             rgba += Material::backShading(normalDotLight, light->getRgb()) * attenuationFactor;
         } else {
-            rgba += (material->lambertianShading(normalDotLight) + material->phongShading(normalDotH)) *
+            Vec3 colors = (material->lambertianShading(normalDotLight) + material->phongShading(normalDotH)) *
                     (light->getRgb() *attenuationFactor);
+            rgba += colors;
         }
     }
 }
 
-Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces, vector<Light *> &lights, double minT, double maxT, int recurseLimit) {
+Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces,
+                            vector<Light *> &lights, double minT, double maxT,
+                            int recurseLimit, int flag) {
     Vec3 rgba = Vec3(0.0, 0.0, 0.0);
     if (recurseLimit == 0) {
         return rgba;
@@ -135,7 +128,7 @@ Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces, 
     double currentMinT = maxT;
 
     for (auto surface: surfaces) {
-        Intersection intersection = surface->intersect(ray, minT, maxT);
+        Intersection intersection = surface->intersect(ray, minT, maxT, flag);
         if (intersection.intersected_ && intersection.t_ < currentMinT) {
             currentMinT = intersection.t_;
             closestSurface = surface;
@@ -162,14 +155,14 @@ Vec3 Camera::calculatePixel(Ray &ray, int rayType, vector<Surface *> &surfaces, 
         }
     }
 
-    calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT, flipped);
+    calculateShading(rgba, ray, currentIntersection, closestSurface->material_, lights, surfaces, minT, maxT, flipped, flag);
     if (closestSurface->material_->idealSpecular_ == Vec3(0.0, 0.0, 0.0) || flipped) {
         return rgba;
     }
 
     Vec3 refRayDir = ray.direction - (currentIntersection.surfaceNormal_ * (ray.direction.dot(currentIntersection.surfaceNormal_)) * 2);
     Ray reflectedRay = Ray(currentIntersection.closestPoint_ + refRayDir * 0.05, refRayDir);
-    Vec3 refRgba = calculatePixel(reflectedRay, 2, surfaces, lights, minT, maxT, recurseLimit - 1);
+    Vec3 refRgba = calculatePixel(reflectedRay, 2, surfaces, lights, minT, maxT, recurseLimit - 1, flag);
 
     rgba += (closestSurface->material_->idealSpecular_ * refRgba);
 
@@ -182,17 +175,17 @@ void Camera::writeRgba (const char fileName[], const Imf::Rgba *pixels, int widt
     file.writePixels (height);
 }
 
-void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vector<Light *> &lights) {
+void Camera::writeScene(const char filename[], vector<Surface *> &surfaces, vector<Light *> &lights, int flag) {
     Imf::Array2D<Imf::Rgba> pixels;
     pixels.resizeErase(heightPixels, widthPixels);
 
     for (int y = 0; y < heightPixels; y++) {
         for (int x = 0; x < widthPixels; x++) {
             Ray ray = getRayForPixel(x, y);
-            int recurseLimit = 10;
+            int recurseLimit = 1;
             double minT = 0.001;
             double maxT = std::numeric_limits<double>::max();;
-            Vec3 colors = calculatePixel(ray, 1, surfaces, lights, minT, maxT, recurseLimit);
+            Vec3 colors = calculatePixel(ray, 1, surfaces, lights, minT, maxT, recurseLimit, flag);
             pixels[y][x] = Rgba(colors.x, colors.y, colors.z, 1.0);
         }
     }
