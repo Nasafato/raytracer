@@ -82,17 +82,17 @@ void Camera::calculateShading(Vec3 &rgba, Ray &ray, BvhNode* bvhRoot, Intersecti
         Vec3 h = (v + lightVector) / (v + lightVector).magnitude();
 
         Intersection lightIntersection;
+        Intersection potentialIntersection;
         Ray lightRay = Ray(intersection.closestPoint_ + lightVector * (double)0.001, lightVector);
+        Vec3 unNormalizedLightVector = (light->position_ - intersection.closestPoint_);
+        double distance = sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
 
         // See if the shadow ray intersects an object
         if (flag == -1) {
-            lightIntersection = bvhRoot->intersect(lightRay, minT, maxT, flag);
+            // lightIntersection = bvhRoot->intersect(lightRay, minT, maxT, flag);
         } else {
             for (auto surface: surfaces) {
-                Intersection potentialIntersection = surface->intersect(lightRay, minT, maxT, flag);
-                if (potentialIntersection.intersected_) {
-                    Vec3 unNormalizedLightVector = (light->position_ - intersection.closestPoint_);
-                    double distance = std::sqrt(unNormalizedLightVector.dot(unNormalizedLightVector));
+                if (surface->intersect(lightRay, potentialIntersection, minT, maxT, flag)) {
                     if (potentialIntersection.t_ <= distance) {
                         lightIntersection = potentialIntersection;
                         break;
@@ -127,32 +127,33 @@ Vec3 Camera::calculatePixel(Ray &ray, int rayType, BvhNode* bvhRoot, vector<Surf
         return rgba;
     }
 
-    Intersection currentIntersection;
+    Intersection intersection, temp;
     Material* material = NULL;
     double currentMinT = maxT;
 
     if (flag == -1) {
-        currentIntersection = bvhRoot->intersect(ray, minT, maxT, flag);
-        material = currentIntersection.material_;
+        // currentIntersection = bvhRoot->intersect(ray, minT, maxT, flag);
+        // material = currentIntersection.material_;
     } else {
         for (auto surface: surfaces) {
-            Intersection intersection = surface->intersect(ray, minT, maxT, flag);
-            if (intersection.intersected_ && intersection.t_ < currentMinT) {
-                currentMinT = intersection.t_;
-                material = surface->material_;
-                currentIntersection = intersection;
+            if (surface->intersect(ray, temp, minT, maxT, flag)) {
+                if (temp.t_ < currentMinT) {
+                    intersection = temp;
+                    currentMinT = temp.t_;
+                    material = surface->material_;
+                }
             }
         }
     }
 
-    if (!currentIntersection.intersected_) {
+    if (!intersection.intersected_) {
         return rgba;
     }
 
     // add ambient stuff
 
     bool flipped = false;
-    if (-1.0 * ray.direction.dot(currentIntersection.surfaceNormal_) < 0.0) {
+    if (-1.0 * ray.direction.dot(intersection.surfaceNormal_) < 0.0) {
         flipped = true;
     }
 
@@ -164,13 +165,13 @@ Vec3 Camera::calculatePixel(Ray &ray, int rayType, BvhNode* bvhRoot, vector<Surf
         }
     }
 
-    calculateShading(rgba, ray, bvhRoot, currentIntersection, material, lights, surfaces, minT, maxT, flipped, flag);
+    calculateShading(rgba, ray, bvhRoot, intersection, material, lights, surfaces, minT, maxT, flipped, flag);
     if (material->idealSpecular_ == Vec3(0.0, 0.0, 0.0) || flipped) {
         return rgba;
     }
 
-    Vec3 refRayDir = ray.direction - (currentIntersection.surfaceNormal_ * (ray.direction.dot(currentIntersection.surfaceNormal_)) * 2);
-    Ray reflectedRay = Ray(currentIntersection.closestPoint_ + refRayDir * 0.05, refRayDir);
+    Vec3 refRayDir = ray.direction - (intersection.surfaceNormal_ * (ray.direction.dot(intersection.surfaceNormal_)) * 2);
+    Ray reflectedRay = Ray(intersection.closestPoint_ + refRayDir * 0.05, refRayDir);
     Vec3 refRgba = calculatePixel(reflectedRay, 2, bvhRoot, surfaces, lights, minT, maxT, recurseLimit - 1, flag);
 
     rgba += (material->idealSpecular_ * refRgba);

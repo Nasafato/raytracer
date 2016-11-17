@@ -15,7 +15,7 @@ BoundingBox::BoundingBox(Point minPoint, Point maxPoint) {
     maxPoint_ = maxPoint;
 }
 
-Intersection BoundingBox::intersect(Ray ray, double minT, double maxT, int flag) {
+bool BoundingBox::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
     Vec3 d = ray.direction;
 
     double t_xmin;
@@ -24,6 +24,9 @@ Intersection BoundingBox::intersect(Ray ray, double minT, double maxT, int flag)
     double t_ymax;
     double t_zmin;
     double t_zmax;
+
+    double tmin;
+    double tmax;
 
     double a_x = 1 / d.x;
     if (a_x >= 0) {
@@ -52,37 +55,35 @@ Intersection BoundingBox::intersect(Ray ray, double minT, double maxT, int flag)
         t_zmin = a_z * (maxPoint_.z - ray.origin.z);
     }
 
-    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
+    if ((t_xmin > t_ymax) || (t_ymin > t_xmax)) {
+        return false;
+    }
 
-    if ((t_xmin > t_ymax) || (t_xmin > t_zmax)
-        || (t_ymin > t_xmax) || (t_ymin > t_zmax)
-        || (t_zmin > t_xmax) || (t_zmin > t_ymax)) {
-        return intersection;
+    tmax = min(t_xmax, t_ymax);
+    tmin = max(t_xmin, t_ymin);
+
+    if (tmax < tmin) {
+        return false;
+    }
+
+    Vec3 normal;
+    if (abs(tmin - t_xmin) < epsilon) {
+        normal = a_x > 0 ? Vec3(-1.0, 0.0, 0.0) : Vec3(1.0, 0.0, 0.0);
+    } else if (abs(tmin - t_ymin) < epsilon) {
+        normal = a_y >= 0 ? Vec3(0.0, -1.0, 0.0) : Vec3(0.0, 1.0, 0.0);
+    } else if (abs(tmin - t_zmin) < epsilon) {
+        normal = a_z >= 0 ? Vec3(0.0, 0.0, -1.0) : Vec3(0.0, 0.0, 1.0);
     } else {
-        // cout << t_xmin << ", " << t_ymin << ", " << t_zmin << endl;
-        t_xmin = max((double)0.0, t_xmin);
-        t_ymin = max((double)0.0, t_ymin);
-        t_zmin = max((double)0.0, t_zmin);
-        intersection.t_ = max(max(t_xmin, t_ymin), t_zmin);
+        return false;
+    }
+
         // cout << "min is " << intersection.t_ << endl;
-        if (intersection.t_ <= 0.0) {
-            return intersection;
-        }
-        intersection.intersected_ = true;
-        intersection.closestPoint_ = ray.origin + d * intersection.t_;
-        Vec3 normal;
-        if (intersection.t_ == t_xmin) {
-            normal = a_x >= 0 ? Vec3(-1.0, 0.0, 0.0) : Vec3(1.0, 0.0, 0.0);
-        } else if (intersection.t_ == t_ymin) {
-            normal = a_y >= 0 ? Vec3(0.0, -1.0, 0.0) : Vec3(0.0, 1.0, 0.0);
-        } else if (intersection.t_ == t_zmin) {
-            normal = a_z >= 0 ? Vec3(0.0, 0.0, -1.0) : Vec3(0.0, 0.0, 1.0);
-        }
-        intersection.surfaceNormal_ = normal;
+    intersection.intersected_ = true;
+    intersection.closestPoint_ = ray.origin + d * intersection.t_;
+    intersection.surfaceNormal_ = normal;
         // cout << "Intersection is " << t << endl;
         // cout << "Normal is " << normal << endl;
-        return intersection;
-    }
+    return true;
 }
 
 
@@ -103,19 +104,20 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
 }
 
 
-Intersection Sphere::intersect(Ray ray, double minT, double maxT, int flag) {
-
-    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
+bool Sphere::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
     intersection.material_ = material_;
 
-    Intersection bboxIntersection = bbox_.intersect(ray, minT, maxT, flag);
-    if (!bboxIntersection.intersected_) {
-        return intersection;
-    }
+    // if (!bbox_.intersect(ray, intersection, minT, maxT, flag)) {
+    //     return false;
+    // }
 
-    if (flag == 1) {
-        return bboxIntersection;
-    }
+    // if (flag == 1) {
+    //     if (intersection.intersected_) {
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     Vec3 e_c = ray.origin - center_;
     Vec3 d = ray.direction;
@@ -123,29 +125,29 @@ Intersection Sphere::intersect(Ray ray, double minT, double maxT, int flag) {
     double discriminantTermOne = d.dot(e_c) * d.dot(e_c);
     double discriminantTermTwo = (e_c.dot(e_c) - (radius * radius)) * d_dot_d;
     double discriminant = discriminantTermOne - discriminantTermTwo;
-
-
-    if (discriminant >= 0.0) {
-        double firstTerm = d.reverse().dot(e_c);
-        double plusDiscriminant = (firstTerm + sqrt(discriminant)) / d_dot_d;
-        double minusDiscriminant = (firstTerm - sqrt(discriminant)) / d_dot_d;
-        if (plusDiscriminant < 0.0 and minusDiscriminant < 0.0) {
-            return intersection;
-        }
-        double minT = std::min(std::max(plusDiscriminant, (double)0.0), std::max(minusDiscriminant, (double)0.0));
-        Point closestPoint = ray.origin + (ray.direction * minT);
-
-        intersection.closestPoint_ = closestPoint;
-        intersection.t_ = minT;
-        intersection.intersected_ = true;
-        intersection.discriminant_ = discriminant;
-        intersection.surfaceNormal_ = (closestPoint - center_) / radius;
-        if (intersection.surfaceNormal_.magnitude() > 1.0) {
-            intersection.surfaceNormal_.normalize();
-        }
+    if (discriminant < 0.0) {
+        return false;
     }
 
-    return intersection;
+    double firstTerm = d.reverse().dot(e_c);
+    double plusDiscriminant = (firstTerm + sqrt(discriminant)) / d_dot_d;
+    double minusDiscriminant = (firstTerm - sqrt(discriminant)) / d_dot_d;
+    if (plusDiscriminant < 0.0 and minusDiscriminant < 0.0) {
+        return false;
+    }
+    double minimumT = min(max(plusDiscriminant, (double)0.0), max(minusDiscriminant, (double)0.0));
+    Point closestPoint = ray.origin + (ray.direction * minimumT);
+
+    intersection.closestPoint_ = closestPoint;
+    intersection.t_ = minimumT;
+    intersection.intersected_ = true;
+    intersection.discriminant_ = discriminant;
+    intersection.surfaceNormal_ = (closestPoint - center_) / radius;
+    if (intersection.surfaceNormal_.magnitude() > 1.0) {
+        intersection.surfaceNormal_.normalize();
+    }
+
+    return true;
 }
 
 Plane::Plane(Vec3 normal, double d, Material *nm) {
@@ -155,28 +157,27 @@ Plane::Plane(Vec3 normal, double d, Material *nm) {
 }
 
 
-Intersection Plane::intersect(Ray ray, double minT, double maxT, int flag) {
-    Intersection intersection;
-
+bool Plane::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
     double numerator = -(ray.origin.toVec3().dot(normal_) - d_);
     double denominator = ray.direction.dot(normal_);
     if (denominator == 0.0) {
-        return intersection;
+        return false;
     }
 
     double t = numerator / denominator;
-    if (t >= 0.0) {
-        Point p = ray.origin + (ray.direction * t);
-        Vec3 normal = normal_;
-        normal.normalize();
-
-        intersection.intersected_ = true;
-        intersection.t_ = t;
-        intersection.closestPoint_ = p;
-        intersection.surfaceNormal_ = normal;
+    if (t < 0.0) {
+        return false;
     }
 
-    return intersection;
+    Point p = ray.origin + (ray.direction * t);
+    Vec3 normal = normal_;
+    normal.normalize();
+
+    intersection.intersected_ = true;
+    intersection.t_ = t;
+    intersection.closestPoint_ = p;
+    intersection.surfaceNormal_ = normal;
+    return true;
 }
 
 Triangle::Triangle(Point p1, Point p2, Point p3, Vec3 normal, Material *nm) {
@@ -231,19 +232,20 @@ BoundingBox BvhNode::getBoundingBox() {
     return bbox_;
 }
 
-Intersection Triangle::intersect(Ray ray, double minT, double maxT, int flag) {
-
-    Intersection intersection = Intersection(false, 0.0, 0.0, Point(0.0, 0.0, 0.0));
-    Intersection bboxIntersection = bbox_.intersect(ray, minT, maxT, flag);
+bool Triangle::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
     intersection.material_ = material_;
 
-    if (!bboxIntersection.intersected_) {
-        return intersection;
-    }
+    // if (!bbox_.intersect(ray, intersection, minT, maxT, flag)) {
+    //     return false;
+    // }
 
-    if (flag == 1) {
-        return bboxIntersection;
-    }
+    // if (flag == 1) {
+    //     if (intersection.intersected_) {
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     double j = p1_.x - ray.origin.x;
     double k = p1_.y - ray.origin.y;
@@ -257,17 +259,17 @@ Intersection Triangle::intersect(Ray ray, double minT, double maxT, int flag) {
     double t = -(f * (a * k - j * b) + e * (j * c - a * l) + d * (b * l - k * c)) / M;
 
     if (t < 0.0) {
-        return intersection;
+        return false;
     }
 
     double gamma = (i * (a * k - j * b) + h * (j * c - a * l) + g * (b * l - k * c)) / M;
     if ((gamma < 0.0) || (gamma > 1.0)) {
-        return intersection;
+        return false;
     }
 
     double beta = (j * (e * i - h * f) + k * (g * f - d * i) + l * (d * h - e * g)) / M;
     if ((beta < 0.0) || (beta > 1.0 - gamma)) {
-        return intersection;
+        return false;
     }
 
     intersection.t_ = t;
@@ -275,7 +277,7 @@ Intersection Triangle::intersect(Ray ray, double minT, double maxT, int flag) {
     intersection.closestPoint_ = ray.origin + ray.direction * t;
     intersection.surfaceNormal_ = normal_;
 
-    return intersection;
+    return true;
 }
 
 BoundingBox BvhNode::combine(BoundingBox b1, BoundingBox b2) {
@@ -290,40 +292,43 @@ BoundingBox BvhNode::combine(BoundingBox b1, BoundingBox b2) {
     return BoundingBox(Point(minx, miny, minz), Point(maxx, maxy, maxz));
 }
 
-Intersection BvhNode::intersect(Ray ray, double minT, double maxT, int flag) {
+bool BvhNode::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
 
-    Intersection intersection = bbox_.intersect(ray, minT, maxT, flag);
-    if (!intersection.intersected_) {
-        return intersection;
+    if (!bbox_.intersect(ray, intersection, minT, maxT, flag)) {
+        return false;
     }
 
     Intersection leftIntersection, rightIntersection;
     if (left_) {
-        leftIntersection = left_->intersect(ray, minT, maxT, flag);
+        left_->intersect(ray, leftIntersection, minT, maxT, flag);
     }
 
     if (right_) {
-        rightIntersection = right_->intersect(ray, minT, maxT, flag);
+        right_->intersect(ray, rightIntersection, minT, maxT, flag);
     }
 
     if (leftIntersection.intersected_ and rightIntersection.intersected_) {
         if (leftIntersection.t_ < rightIntersection.t_) {
-            return leftIntersection;
+            intersection = leftIntersection;
+            return true;
         } else {
-            return rightIntersection;
+            intersection = rightIntersection;
+            return true;
         }
     }
 
     if (leftIntersection.intersected_) {
-        return leftIntersection;
+        intersection = leftIntersection;
+        return true;
     }
 
     if (rightIntersection.intersected_) {
-        return rightIntersection;
+        intersection = rightIntersection;
+        return true;
     }
 
     intersection.intersected_ = false;
-    return intersection;
+    return false;
 }
 
 

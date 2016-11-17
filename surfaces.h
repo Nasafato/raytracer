@@ -9,6 +9,8 @@
 #include "intersection.h"
 #include <vector>
 
+const double epsilon = 0.0001;
+
 class BoundingBox {
 
 public:
@@ -16,7 +18,7 @@ public:
     Point maxPoint_;
     BoundingBox();
     BoundingBox(Point, Point);
-    Intersection intersect(Ray, double, double, int);
+    bool intersect(Ray&, Intersection&, double, double, int);
 
     friend std::ostream &operator<<(std::ostream &os, BoundingBox &bbox) {
         return os<<"<"<<bbox.minPoint_<<","<<bbox.maxPoint_<<">";
@@ -30,7 +32,7 @@ public:
     Material* material_;
     Point center_;
     BoundingBox bbox_;
-    virtual Intersection intersect(Ray, double, double, int) = 0;
+    virtual bool intersect(Ray&, Intersection&, double, double, int) = 0;
     virtual void getType() = 0;
     virtual BoundingBox getBoundingBox() = 0;
 };
@@ -41,7 +43,7 @@ protected:
     double radius;
 
 public:
-    Intersection intersect(Ray, double, double, int);
+    bool intersect(Ray&, Intersection&, double, double, int);
     Sphere(Point, double, Material *);
     BoundingBox getBoundingBox();
     void getType();
@@ -54,7 +56,7 @@ private:
     double d_;
 
 public:
-    Intersection intersect(Ray, double, double, int);
+    bool intersect(Ray&, Intersection&, double, double, int);
     Plane(Vec3, double d, Material *);
     BoundingBox getBoundingBox();
     void getType();
@@ -74,7 +76,7 @@ private:
     Vec3 normal_;
 
 public:
-    Intersection intersect(Ray, double, double, int);
+    bool intersect(Ray&, Intersection&, double, double, int);
     Triangle(Point, Point, Point, Vec3, Material *);
     BoundingBox getBoundingBox();
     void getType();
@@ -83,7 +85,7 @@ public:
 class BvhNode: public Surface {
 
 public:
-    Intersection intersect(Ray, double, double, int);
+    bool intersect(Ray&, Intersection&, double, double, int);
     BvhNode();
     BvhNode(std::vector<Surface *>, int, std::vector<BvhNode *>);
     Surface *left_;

@@ -391,7 +391,7 @@ int main (int argc, char *argv[])
 
     clock_t start = clock();
 
-    int flag = -1;
+    int flag = 1;
     if (argc == 4) {
         if (strcmp(argv[3], "0") == 0) {
             flag = 0;
