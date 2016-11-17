@@ -82,20 +82,5 @@ public:
     void getType();
 };
 
-class BvhNode: public Surface {
-
-public:
-    bool intersect(Ray&, Intersection&, double, double, int);
-    BvhNode();
-    BvhNode(std::vector<Surface *>, int, std::vector<BvhNode *>);
-    Surface *left_;
-    Surface *right_;
-    BoundingBox combine(BoundingBox, BoundingBox);
-    BoundingBox getBoundingBox();
-    // void createNode(std::vector<Surface *>, int);
-    void getType();
-
-};
-
 
 #endif

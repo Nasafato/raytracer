@@ -9,6 +9,7 @@
 #include "camera.h"
 #include "light.h"
 #include "constants.h"
+#include "bvhNode.h"
 
 
 #endif

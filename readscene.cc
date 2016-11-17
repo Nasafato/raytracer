@@ -405,8 +405,7 @@ int main (int argc, char *argv[])
 
     Camera camera = parseSceneFile (argv[1], surfaces, lights, materials);
 
-    vector<BvhNode*> bvhTree;
-    BvhNode* bvhRoot = new BvhNode(surfaces, 0, bvhTree);
+    BvhNode* bvhRoot = new BvhNode(surfaces, 0, surfaces.size() - 1, 0);
 
     camera.writeScene(argv[2], bvhRoot, surfaces, lights, flag);
 
@@ -426,11 +425,6 @@ int main (int argc, char *argv[])
         delete light;
     }
     lights.clear();
-
-    for (auto bvhNode: bvhTree) {
-        delete bvhNode;
-    }
-    bvhTree.clear();
 
     double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
     cout<< duration << "s" << endl;

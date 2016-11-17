@@ -13,6 +13,7 @@
 #include "light.h"
 #include "intersection.h"
 #include "constants.h"
+#include "bvhNode.h"
 
 class Camera {
 public:
