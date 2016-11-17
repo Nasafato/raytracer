@@ -391,13 +391,13 @@ int main (int argc, char *argv[])
 
     clock_t start = clock();
 
-    int flag = 1;
+    int flag = BBOX_ONLY;
     if (argc == 4) {
         if (strcmp(argv[3], "0") == 0) {
-            flag = 0;
+            flag = NO_BVH;
             cout << "Flag is 0" << endl;
         } else if (strcmp(argv[3], "1") == 0) {
-            flag = 1;
+            flag = BBOX_ONLY;
             cout << "Flag is 1" << endl;
         }
     }

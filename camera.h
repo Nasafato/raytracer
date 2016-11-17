@@ -12,6 +12,7 @@
 #include "ray.h"
 #include "light.h"
 #include "intersection.h"
+#include "constants.h"
 
 class Camera {
 public:

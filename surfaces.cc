@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include "surfaces.h"
+#include "constants.h"
 
 using namespace std;
 
@@ -16,18 +17,15 @@ BoundingBox::BoundingBox(Point minPoint, Point maxPoint) {
 }
 
 bool BoundingBox::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
-    Vec3 d = ray.direction;
-
     double t_xmin;
     double t_xmax;
     double t_ymin;
     double t_ymax;
     double t_zmin;
     double t_zmax;
-
     double tmin;
     double tmax;
-
+    Vec3 d = ray.direction;
     double a_x = 1 / d.x;
     if (a_x >= 0) {
         t_xmin = a_x * (minPoint_.x - ray.origin.x);
@@ -55,38 +53,33 @@ bool BoundingBox::intersect(Ray& ray, Intersection& intersection, double minT, d
         t_zmin = a_z * (maxPoint_.z - ray.origin.z);
     }
 
-    if ((t_xmin > t_ymax) || (t_ymin > t_xmax)) {
+
+    if ((t_xmin > t_ymax) || (t_xmin > t_zmax)
+        || (t_ymin > t_xmax) || (t_ymin > t_zmax)
+        || (t_zmin > t_xmax) || (t_zmin > t_ymax)) {
         return false;
-    }
-
-    tmax = min(t_xmax, t_ymax);
-    tmin = max(t_xmin, t_ymin);
-
-    if (tmax < tmin) {
-        return false;
-    }
-
-    Vec3 normal;
-    if (abs(tmin - t_xmin) < epsilon) {
-        normal = a_x > 0 ? Vec3(-1.0, 0.0, 0.0) : Vec3(1.0, 0.0, 0.0);
-    } else if (abs(tmin - t_ymin) < epsilon) {
-        normal = a_y >= 0 ? Vec3(0.0, -1.0, 0.0) : Vec3(0.0, 1.0, 0.0);
-    } else if (abs(tmin - t_zmin) < epsilon) {
-        normal = a_z >= 0 ? Vec3(0.0, 0.0, -1.0) : Vec3(0.0, 0.0, 1.0);
     } else {
-        return false;
+        t_xmin = max((double)0.0, t_xmin);
+        t_ymin = max((double)0.0, t_ymin);
+        t_zmin = max((double)0.0, t_zmin);
+        intersection.t_ = max(max(t_xmin, t_ymin), t_zmin);
+        if (intersection.t_ <= 0.0) {
+            return false;
+        }
+        intersection.intersected_ = true;
+        intersection.closestPoint_ = ray.origin + d * intersection.t_;
+        Vec3 normal;
+        if (intersection.t_ == t_xmin) {
+            normal = a_x >= 0 ? Vec3(-1.0, 0.0, 0.0) : Vec3(1.0, 0.0, 0.0);
+        } else if (intersection.t_ == t_ymin) {
+            normal = a_y >= 0 ? Vec3(0.0, -1.0, 0.0) : Vec3(0.0, 1.0, 0.0);
+        } else if (intersection.t_ == t_zmin) {
+            normal = a_z >= 0 ? Vec3(0.0, 0.0, -1.0) : Vec3(0.0, 0.0, 1.0);
+        }
+        intersection.surfaceNormal_ = normal;
+        return true;
     }
-
-        // cout << "min is " << intersection.t_ << endl;
-    intersection.intersected_ = true;
-    intersection.closestPoint_ = ray.origin + d * intersection.t_;
-    intersection.surfaceNormal_ = normal;
-        // cout << "Intersection is " << t << endl;
-        // cout << "Normal is " << normal << endl;
-    return true;
 }
-
-
 
 
 Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
@@ -107,17 +100,13 @@ Sphere::Sphere(Point ncenter, double nradius, Material* nm) {
 bool Sphere::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
     intersection.material_ = material_;
 
-    // if (!bbox_.intersect(ray, intersection, minT, maxT, flag)) {
-    //     return false;
-    // }
+    if (!bbox_.intersect(ray, intersection, minT, maxT, flag)) {
+        return false;
+    }
 
-    // if (flag == 1) {
-    //     if (intersection.intersected_) {
-    //         return true;
-    //     } else {
-    //         return false;
-    //     }
-    // }
+    if (flag == BBOX_ONLY) {
+        return true;
+    }
 
     Vec3 e_c = ray.origin - center_;
     Vec3 d = ray.direction;
@@ -235,9 +224,9 @@ BoundingBox BvhNode::getBoundingBox() {
 bool Triangle::intersect(Ray& ray, Intersection& intersection, double minT, double maxT, int flag) {
     intersection.material_ = material_;
 
-    // if (!bbox_.intersect(ray, intersection, minT, maxT, flag)) {
-    //     return false;
-    // }
+    if (!bbox_.intersect(ray, intersection, minT, maxT, flag)) {
+        return false;
+    }
 
     // if (flag == 1) {
     //     if (intersection.intersected_) {
